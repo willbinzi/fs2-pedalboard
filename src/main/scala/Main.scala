@@ -33,7 +33,6 @@ object Main extends IOApp.Simple:
           outputLine.open(AUDIO_FORMAT)
           outputLine.start()
           outputLine
-        },
-        closeAfterUse = false
+        }
       ))
   } yield ()).compile.drain

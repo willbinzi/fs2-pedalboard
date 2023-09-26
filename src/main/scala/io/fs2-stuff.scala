@@ -17,7 +17,7 @@ def writeSourceDataLine[F[_]](
   writeSourceDataLineGeneric(fos, closeAfterUse) { (os, b, off, len) =>
     F.interruptible {
       os.write(b, off, len)
-      os.flush()
+      ()
     }
   }
 
