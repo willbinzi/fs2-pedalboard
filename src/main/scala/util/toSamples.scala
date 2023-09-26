@@ -1,8 +1,7 @@
 package util
 
+import config.FLOAT_BUFFER_SIZE
 import fs2.{ Chunk, Pipe }
-
-val FLOAT_BUFFER_SIZE: Int = BYTES_BUFFER_SIZE / 2
 
 def toSamples[F[_]]: Pipe[F, Byte, Float] =
   val buffer: Array[Float] = new Array[Float](FLOAT_BUFFER_SIZE)

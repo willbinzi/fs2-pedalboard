@@ -1,10 +1,9 @@
 package util
 
+import config.BYTES_BUFFER_SIZE
 import fs2.{ Chunk, Pipe }
 
 val fullScale: Int = 32768
-
-val BYTES_BUFFER_SIZE: Int = 4096
 
 def toBytes[F[_]]: Pipe[F, Float, Byte] =
   val buffer: Array[Byte] = new Array[Byte](BYTES_BUFFER_SIZE)
