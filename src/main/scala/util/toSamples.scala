@@ -2,7 +2,10 @@ package util
 
 import fs2.{ Chunk, Pipe }
 
-def toSamples[F[_]](buffer: Array[Float]): Pipe[F, Byte, Float] =
+val FLOAT_BUFFER_SIZE: Int = BYTES_BUFFER_SIZE / 2
+
+def toSamples[F[_]]: Pipe[F, Byte, Float] =
+  val buffer: Array[Float] = new Array[Float](FLOAT_BUFFER_SIZE)
   _.mapChunks(unpack(buffer))
 
 def unpack(buffer: Array[Float])(chunk: Chunk[Byte]): Chunk[Float] =

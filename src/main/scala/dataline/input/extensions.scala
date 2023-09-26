@@ -19,7 +19,7 @@ extension (line: TargetDataLine)
     }
 
   def captureSamples[F[_]: Sync](format: AudioFormat): Stream[F, Float] =
-    captureBytes(format).through(util.toSamples(new Array[Float](BUFFER_SIZE / 2)))
+    captureBytes(format).through(util.toSamples)
 
   def captureBytes[F[_]: Sync](format: AudioFormat): Stream[F, Byte] =
     readInputStream(inputStream(format).widen[InputStream], BUFFER_SIZE)

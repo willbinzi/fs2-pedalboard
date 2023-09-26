@@ -4,7 +4,10 @@ import fs2.{ Chunk, Pipe }
 
 val fullScale: Int = 32768
 
-def toBytes[F[_]](buffer: Array[Byte]): Pipe[F, Float, Byte] =
+val BYTES_BUFFER_SIZE: Int = 4096
+
+def toBytes[F[_]]: Pipe[F, Float, Byte] =
+  val buffer: Array[Byte] = new Array[Byte](BYTES_BUFFER_SIZE)
   _.mapChunks(pack(buffer))
 
 def pack(buffer: Array[Byte])(chunk: Chunk[Float]): Chunk[Byte] =
