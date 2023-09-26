@@ -2,8 +2,6 @@ package util
 
 import fs2.{ Chunk, Pipe }
 
-val bytesPerSample: Int = 2
-
 val fullScale: Int = 32768
 
 def toBytes[F[_]]: Pipe[F, Float, Byte] =

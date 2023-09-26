@@ -1,8 +1,9 @@
 package mixer
 
-import javax.sound.sampled.{ Mixer, SourceDataLine, TargetDataLine }
 import cats.effect.kernel.Sync
 import cats.syntax.flatMap.*
+
+import javax.sound.sampled.{ Mixer, SourceDataLine, TargetDataLine }
 
 extension (mixer: Mixer)
   def getSourceDataLine[F[_]: Sync]: F[SourceDataLine] =

@@ -1,13 +1,10 @@
-import line.input.captureSamples
+import cats.effect.{ IOApp, IO }
+import dataline.input.captureSamples
+import dataline.output.playSamples
+import fs2.Stream
 import mixer.{ getMixer, getSourceDataLine, getTargetDataLine }
 
-import javax.sound.sampled.AudioFormat
-import cats.effect.IOApp
-import cats.effect.IO
-import fs2.Stream
-import line.output.playSamples
-import javax.sound.sampled.TargetDataLine
-import javax.sound.sampled.SourceDataLine
+import javax.sound.sampled.{ AudioFormat, SourceDataLine, TargetDataLine }
 
 val MACBOOK_SPEAKERS: String = "MacBook Pro Speakers"
 val MACBOOK_MIC: String = "MacBook Pro Microphone"
@@ -32,5 +29,4 @@ object Main extends IOApp.Simple:
   def signalStream(inputLine: TargetDataLine, outputLine: SourceDataLine): Stream[IO, Unit] =
     inputLine
       .captureSamples[IO](AUDIO_FORMAT)
-      .map(sample => math.min(sample, -0.5f))
       .through(outputLine.playSamples[IO](AUDIO_FORMAT))
