@@ -4,13 +4,12 @@ import fs2.{ Chunk, Pipe }
 
 val fullScale: Int = 32768
 
-def toBytes[F[_]]: Pipe[F, Float, Byte] =
-  _.mapChunks(pack)
+def toBytes[F[_]](buffer: Array[Byte]): Pipe[F, Float, Byte] =
+  _.mapChunks(pack(buffer))
 
-def pack(chunk: Chunk[Float]): Chunk[Byte] =
-  val byteArray: Array[Byte] = new Array[Byte](chunk.size * 2)
-  pack(chunk, byteArray)
-  Chunk.array(byteArray)
+def pack(buffer: Array[Byte])(chunk: Chunk[Float]): Chunk[Byte] =
+  pack(chunk, buffer)
+  Chunk.array(buffer)
 
 def pack(
   samples: Chunk[Float],

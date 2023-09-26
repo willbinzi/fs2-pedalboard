@@ -2,13 +2,12 @@ package util
 
 import fs2.{ Chunk, Pipe }
 
-def toSamples[F[_]]: Pipe[F, Byte, Float] =
-  _.mapChunks(unpack)
+def toSamples[F[_]](buffer: Array[Float]): Pipe[F, Byte, Float] =
+  _.mapChunks(unpack(buffer))
 
-def unpack(chunk: Chunk[Byte]): Chunk[Float] =
-  val samples: Array[Float] = new Array[Float](chunk.size / 2)
-  unpack(chunk, samples)
-  Chunk.array(samples)
+def unpack(buffer: Array[Float])(chunk: Chunk[Byte]): Chunk[Float] =
+  unpack(chunk, buffer)
+  Chunk.array(buffer)
 
 def unpack(
   bytes: Chunk[Byte],
