@@ -1,34 +1,31 @@
 package util
 
-import fs2.Pipe
-import fs2.Chunk
+import fs2.{ Chunk, Pipe }
 
 def toSamples[F[_]]: Pipe[F, Byte, Float] =
   _.mapChunks(unpack)
 
 def unpack(chunk: Chunk[Byte]): Chunk[Float] =
-  val bytes: Array[Byte] = chunk.toArray
-  val samples: Array[Float] = new Array[Float](bytes.length / 2)
-  unpack(bytes, samples, bytes.length)
+  val samples: Array[Float] = new Array[Float](chunk.size / 2)
+  unpack(chunk, samples)
   Chunk.array(samples)
 
 def unpack(
-  bytes: Array[Byte],
-  samples: Array[Float],
-  blen: Int
+  bytes: Chunk[Byte],
+  samples: Array[Float]
 ): Unit =
   // byte iterator
   var i: Int = 0
   // sample iterator
   var s: Int = 0
-  while i < blen do
+  while i < bytes.size do
     // As proportion of full scale
     samples(s) = extendSign(unpackSample(bytes, i)) / fullScale.toFloat
     i += 2
     s += 1
     ()
 
-def unpackSample(bytes: Array[Byte], i: Int): Long =
+def unpackSample(bytes: Chunk[Byte], i: Int): Long =
   ((bytes(i) & 0xffL) | ((bytes(i + 1) & 0xffL) << 8L))
 
 def extendSign(sample: Long): Long =
