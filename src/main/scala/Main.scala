@@ -1,8 +1,12 @@
-import line.output.play
-import line.input.record
+// import line.output.play
+import line.input.capture
 import mixer.{ getMixer, getSourceDataLine, getTargetDataLine }
 
 import javax.sound.sampled.AudioFormat
+import cats.effect.IOApp
+import cats.effect.IO
+import fs2.Stream
+import io.writeSourceDataLine
 
 val MACBOOK_SPEAKERS: String = "MacBook Pro Speakers"
 val MACBOOK_MIC: String = "MacBook Pro Microphone"
@@ -17,14 +21,19 @@ val AUDIO_FORMAT = new AudioFormat(
   true    // Big endian
 )
 
-@main def go: Unit =
-  val outputLine = getMixer(MACBOOK_SPEAKERS)
-    .getSourceDataLine
-
-  val inputLine = getMixer(KOMPLETE_AUDIO)
-    .getTargetDataLine
-
-  outputLine.play(inputLine.record(AUDIO_FORMAT))
-
-  inputLine.stop()
-  inputLine.close()
+object Main extends IOApp.Simple:
+  def run: IO[Unit] = (for {
+    inputLine <- Stream.eval(IO(getMixer(KOMPLETE_AUDIO).getTargetDataLine))
+    outputLine <- Stream.eval(IO(getMixer(MACBOOK_SPEAKERS).getSourceDataLine))
+    _ <- inputLine.capture[IO](AUDIO_FORMAT)
+      .through(util.toSamples)
+      .through(util.toBytes)
+      .through(writeSourceDataLine(
+        IO {
+          outputLine.open(AUDIO_FORMAT)
+          outputLine.start()
+          outputLine
+        },
+        closeAfterUse = false
+      ))
+  } yield ()).compile.drain

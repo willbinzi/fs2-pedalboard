@@ -1,8 +1,18 @@
 package util
 
+import fs2.{ Chunk, Pipe }
+
 val bytesPerSample: Int = 2
 
 val fullScale: Int = 32768
+
+def toBytes[F[_]]: Pipe[F, Float, Byte] =
+  _.mapChunks(pack)
+
+def pack(chunk: Chunk[Float]): Chunk[Byte] =
+  val byteArray: Array[Byte] = new Array[Byte](chunk.size * 2)
+  pack(chunk.toArray, byteArray, chunk.size)
+  Chunk.array(byteArray)
 
 def pack(
   samples: Array[Float],
