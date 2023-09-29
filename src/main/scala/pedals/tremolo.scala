@@ -41,5 +41,13 @@ def squareWave(cycleLengthInSeconds: Float): Stream[Pure, Float] =
   (waveSection(halfCycleLengthInChunks, _ => 1) ++
     waveSection(halfCycleLengthInChunks, _ => 0)).repeat
 
-def tremolo[F[_]](cycleLengthInSeconds: Float): Pedal[F] =
-  _.zipWith(sineWave(cycleLengthInSeconds))(_ * _)
+enum Waveform:
+  case Sine, Triangle, Square
+
+def tremolo[F[_]](waveform: Waveform, cycleLengthInSeconds: Float): Pedal[F] =
+  val waveFunction = waveform match
+    case Waveform.Sine => sineWave(cycleLengthInSeconds)
+    case Waveform.Triangle => triangleWave(cycleLengthInSeconds)
+    case Waveform.Square => squareWave(cycleLengthInSeconds)
+
+  _.zipWith(waveFunction)(_ * _)
