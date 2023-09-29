@@ -9,14 +9,7 @@ def toBytes[F[_]]: Pipe[F, Float, Byte] =
   val buffer: Array[Byte] = new Array[Byte](BYTES_BUFFER_SIZE)
   _.mapChunks(pack(buffer))
 
-def pack(buffer: Array[Byte])(chunk: Chunk[Float]): Chunk[Byte] =
-  pack(chunk, buffer)
-  Chunk.array(buffer)
-
-def pack(
-  samples: Chunk[Float],
-  bytes: Array[Byte]
-): Unit =
+def pack(bytes: Array[Byte])(samples: Chunk[Float]): Chunk[Byte] =
   // byte iterator
   var i: Int = 0
   // sample iterator
@@ -26,6 +19,7 @@ def pack(
     i += 2
     s += 1
     ()
+  Chunk.array(bytes)
 
 def packBits(
   bytes: Array[Byte],
