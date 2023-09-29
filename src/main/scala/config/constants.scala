@@ -12,7 +12,7 @@ val AUDIO_FORMAT = new AudioFormat(
   16,     // Sample size in bits
   2,      // Channels
   true,   // Signed
-  true    // Big endian
+  false   // Big endian
 )
 
 val BYTES_BUFFER_SIZE: Int = 4096
