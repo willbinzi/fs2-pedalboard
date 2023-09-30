@@ -1,6 +1,6 @@
 package dataline.input.unpack
 
-import config.{ FLOAT_BUFFER_SIZE, FULL_SCALE }
+import constants.{ FLOAT_BUFFER_SIZE, FULL_SCALE }
 import fs2.{ Chunk, Pipe }
 
 def toSamples[F[_]]: Pipe[F, Byte, Float] =

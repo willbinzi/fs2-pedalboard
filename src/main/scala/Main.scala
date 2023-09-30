@@ -1,5 +1,5 @@
 import cats.effect.{ IOApp, IO }
-import config.{ AUDIO_FORMAT, KOMPLETE_AUDIO, MACBOOK_SPEAKERS }
+import constants.{ AUDIO_FORMAT, KOMPLETE_AUDIO, MACBOOK_SPEAKERS }
 import dataline.input.captureSamples
 import dataline.output.playSamples
 import fs2.Stream

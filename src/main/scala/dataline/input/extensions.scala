@@ -2,7 +2,7 @@ package dataline.input
 
 import cats.effect.kernel.Sync
 import cats.syntax.functor.*
-import config.BYTES_BUFFER_SIZE
+import constants.BYTES_BUFFER_SIZE
 import fs2.io.readInputStream
 import fs2.Stream
 

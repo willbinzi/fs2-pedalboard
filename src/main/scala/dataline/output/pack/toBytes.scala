@@ -1,6 +1,6 @@
 package dataline.output.pack
 
-import config.{ BYTES_BUFFER_SIZE, FULL_SCALE }
+import constants.{ BYTES_BUFFER_SIZE, FULL_SCALE }
 import fs2.{ Chunk, Pipe }
 
 def toBytes[F[_]]: Pipe[F, Float, Byte] =

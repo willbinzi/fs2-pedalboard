@@ -1,4 +1,4 @@
-package config
+package constants
 
 import javax.sound.sampled.AudioFormat
 

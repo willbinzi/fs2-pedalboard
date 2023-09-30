@@ -1,7 +1,7 @@
 package pedals
 
 import fs2.{ Chunk, Pull, Pure, Stream }
-import config.{ AUDIO_FORMAT, FLOAT_BUFFER_SIZE }
+import constants.{ AUDIO_FORMAT, FLOAT_BUFFER_SIZE }
 
 val CHUNKS_PER_SECOND: Float = AUDIO_FORMAT.getSampleRate / FLOAT_BUFFER_SIZE
 

@@ -1,6 +1,6 @@
 package pedals
 
-import config.FLOAT_BUFFER_SIZE
+import constants.FLOAT_BUFFER_SIZE
 import fs2.Chunk
 
 // TODO: Can we neaten this up somehow by using Stream.repeat for playback?
