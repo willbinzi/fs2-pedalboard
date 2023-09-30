@@ -17,7 +17,8 @@ object Main extends IOApp.Simple:
   def signalStream(inputLine: TargetDataLine, outputLine: SourceDataLine): Stream[IO, Unit] =
     inputLine
       .captureSamples[IO](AUDIO_FORMAT)
-      .through(pedals.overdrive(0.2))
-      .through(pedals.tremolo(pedals.tremolo.waveforms.WaveFormType.Triangle, 2))
-      .through(pedals.looper(2))
+      // .through(pedals.overdrive(0.2))
+      // .through(pedals.tremolo(pedals.tremolo.waveforms.WaveFormType.Triangle, 2))
+      // .through(pedals.looper(4))
+      .through(pedals.delay(2, 0.3))
       .through(outputLine.playSamples[IO](AUDIO_FORMAT))
