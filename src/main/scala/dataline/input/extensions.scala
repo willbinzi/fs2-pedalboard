@@ -18,7 +18,7 @@ extension (line: TargetDataLine)
     }
 
   def captureSamples[F[_]: Sync](format: AudioFormat): Stream[F, Float] =
-    captureBytes(format).through(util.toSamples)
+    captureBytes(format).through(unpack.toSamples)
 
   def captureBytes[F[_]: Sync](format: AudioFormat): Stream[F, Byte] =
     readInputStream(inputStream(format).widen[InputStream], BYTES_BUFFER_SIZE)

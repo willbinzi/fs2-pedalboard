@@ -1,6 +1,6 @@
-package util
+package dataline.input.unpack
 
-import config.FLOAT_BUFFER_SIZE
+import config.{ FLOAT_BUFFER_SIZE, FULL_SCALE }
 import fs2.{ Chunk, Pipe }
 
 def toSamples[F[_]]: Pipe[F, Byte, Float] =
@@ -14,7 +14,7 @@ def unpack(samples: Array[Float])(bytes: Chunk[Byte]): Chunk[Float] =
   var s: Int = 0
   while i < bytes.size do
     // As proportion of full scale
-    samples(s) = extendSign(unpackSample(bytes, i)) / fullScale.toFloat
+    samples(s) = extendSign(unpackSample(bytes, i)) / FULL_SCALE.toFloat
     i += 2
     s += 1
     ()

@@ -8,7 +8,7 @@ import javax.sound.sampled.{ AudioFormat, SourceDataLine }
 
 extension (line: SourceDataLine)
   def playSamples[F[_]: Sync](format: AudioFormat): Pipe[F, Float, Unit] =
-    util.toBytes andThen
+    pack.toBytes andThen
       writeSourceDataLine(
         Sync[F].delay {
           line.open(format)

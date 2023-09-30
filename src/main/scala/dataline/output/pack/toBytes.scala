@@ -1,9 +1,7 @@
-package util
+package dataline.output.pack
 
-import config.BYTES_BUFFER_SIZE
+import config.{ BYTES_BUFFER_SIZE, FULL_SCALE }
 import fs2.{ Chunk, Pipe }
-
-val fullScale: Int = 32768
 
 def toBytes[F[_]]: Pipe[F, Float, Byte] =
   val buffer: Array[Byte] = new Array[Byte](BYTES_BUFFER_SIZE)
@@ -15,7 +13,7 @@ def pack(bytes: Array[Byte])(samples: Chunk[Float]): Chunk[Byte] =
   // sample iterator
   var s: Int = 0
   while s < samples.size do
-    packBits(bytes, i, (samples(s) * fullScale).toLong)
+    packBits(bytes, i, (samples(s) * FULL_SCALE).toLong)
     i += 2
     s += 1
     ()

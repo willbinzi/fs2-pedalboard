@@ -17,3 +17,6 @@ val AUDIO_FORMAT = new AudioFormat(
 
 val BYTES_BUFFER_SIZE: Int = 4096
 val FLOAT_BUFFER_SIZE: Int = BYTES_BUFFER_SIZE / 2
+
+// Samples are give as 16 bit signed integers. The full scale is therefore 2^15 = 32768
+val FULL_SCALE: Int = 32768
