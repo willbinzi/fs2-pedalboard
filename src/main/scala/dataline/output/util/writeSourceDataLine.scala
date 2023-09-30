@@ -1,4 +1,4 @@
-package io
+package util
 
 import cats.effect.kernel.Sync
 import fs2.{ Chunk, Pipe, Stream }
