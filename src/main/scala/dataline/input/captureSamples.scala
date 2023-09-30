@@ -10,15 +10,15 @@ import java.io.InputStream
 import javax.sound.sampled.{ AudioFormat, AudioInputStream, TargetDataLine }
 
 extension (line: TargetDataLine)
-  def inputStream[F[_]: Sync](format: AudioFormat): F[AudioInputStream] =
+  def captureSamples[F[_]: Sync](format: AudioFormat): Stream[F, Float] =
+    captureBytes(format).through(unpack.toSamples)
+
+  private def captureBytes[F[_]: Sync](format: AudioFormat): Stream[F, Byte] =
+    readInputStream(inputStream(format).widen[InputStream], BYTES_BUFFER_SIZE)
+
+  private def inputStream[F[_]: Sync](format: AudioFormat): F[AudioInputStream] =
     Sync[F].delay {
       line.open(format)
       line.start()
       new AudioInputStream(line)
     }
-
-  def captureSamples[F[_]: Sync](format: AudioFormat): Stream[F, Float] =
-    captureBytes(format).through(unpack.toSamples)
-
-  def captureBytes[F[_]: Sync](format: AudioFormat): Stream[F, Byte] =
-    readInputStream(inputStream(format).widen[InputStream], BYTES_BUFFER_SIZE)
