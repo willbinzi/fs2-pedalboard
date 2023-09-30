@@ -1,9 +1,7 @@
 package pedals
 
 import fs2.{ Chunk, Pull, Pure, Stream }
-import constants.{ AUDIO_FORMAT, FLOAT_BUFFER_SIZE }
-
-val CHUNKS_PER_SECOND: Float = AUDIO_FORMAT.getSampleRate / FLOAT_BUFFER_SIZE
+import constants.{ CHUNKS_PER_SECOND, FLOAT_BUFFER_SIZE }
 
 def waveSection(sectionLengthInChunks: Int, f: Long => Float): Stream[Pure, Float] =
   val buffer = new Array[Float](FLOAT_BUFFER_SIZE)
