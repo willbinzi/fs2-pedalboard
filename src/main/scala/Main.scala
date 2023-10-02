@@ -9,18 +9,11 @@ object Main extends ResourceApp.Simple:
   def run: Resource[IO, Unit] = for {
     inputLine  <- Resource.eval(getMixer[IO](KOMPLETE_AUDIO).flatMap(_.getTargetDataLine))
     outputLine <- Resource.eval(getMixer[IO](MACBOOK_SPEAKERS).flatMap(_.getSourceDataLine))
-    // reverb     <- pedals.reverbF[IO](2, 0.3)
-    // looper     <- pedals.looperF[IO](4)
-    delay      <- pedals.delayR[IO](0.3f, 2)
-    // delay      <- pedals.delayStart[IO](10)
+    reverb     <- pedals.reverbR[IO](2, 0.3)
     _          <- Resource.eval(
       inputLine
         .captureSamples[IO](AUDIO_FORMAT)
-        .through(delay)
-        // .through(pedals.delayStart(5))
-        // .through(reverb)
-        // .through(pedals.delay(2, 0.3))
-        // .through(looper)
+        .through(reverb)
         .through(outputLine.playSamples[IO](AUDIO_FORMAT)).compile.drain
       )
   } yield ()
