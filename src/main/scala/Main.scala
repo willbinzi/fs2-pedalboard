@@ -8,7 +8,7 @@ object Main extends ResourceApp.Simple:
   def run: Resource[IO, Unit] = for {
     inputLine  <- getMixer[IO](KOMPLETE_AUDIO).flatMap(_.getTargetDataLine).toResource
     outputLine <- getMixer[IO](MACBOOK_SPEAKERS).flatMap(_.getSourceDataLine).toResource
-    reverb     <- pedals.reverbR[IO](2, 0.3)
+    reverb     <- pedals.reverbR[IO]
     _          <-
       inputLine
         .captureSamples[IO](AUDIO_FORMAT)

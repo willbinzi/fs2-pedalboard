@@ -6,7 +6,7 @@ import cats.syntax.all.*
 import fs2.concurrent.Topic
 import fs2.Chunk
 
-def reverbR[F[_]: Concurrent](delayTimeInSeconds: Float, feedback: Float): Resource[F, Pedal[F]] =
+def reverbR[F[_]: Concurrent]: Resource[F, Pedal[F]] =
   for {
     topic   <- Topic[F, Chunk[Float]].toResource
     stream1 <- topic.subscribeAwaitUnbounded.map(_.unchunks)
@@ -17,6 +17,8 @@ def reverbR[F[_]: Concurrent](delayTimeInSeconds: Float, feedback: Float): Resou
     delay2  <- delayF(0.733, 4.999).toResource
     delay3  <- delayF(0.715, 5.399).toResource
     delay4  <- delayF(0.697, 5.801).toResource
+    allPass1 <- allPassFilterF(0.7, 1.051).toResource
+    allPass2 <- allPassFilterF(0.7, 0.337).toResource
   } yield (
     stream =>
       stream.chunks.evalMap( sampleChunk =>
@@ -27,4 +29,6 @@ def reverbR[F[_]: Concurrent](delayTimeInSeconds: Float, feedback: Float): Resou
         stream3.through(delay3).chunks |+|
         stream4.through(delay4).chunks
       ).unchunks
+      .through(allPass1)
+      .through(allPass2)
   )
