@@ -29,6 +29,6 @@ def delayF[F[_]: Concurrent](repeatGain: Float, delayTimeInSeconds: Float): F[Pe
       (
         stream.chunks |+|
           (silence(delayTimeInSeconds) ++ repeatsChannel.stream.map(_.map(_ * repeatGain)))
-      ).evalTap(chunk => repeatsChannel.send(chunk).void)
+      ).evalTap(repeatsChannel.send)
       .unchunks
   )
