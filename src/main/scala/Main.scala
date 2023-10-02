@@ -1,24 +1,26 @@
-import cats.effect.{ IOApp, IO }
+import cats.effect.{ IO, ResourceApp }
 import constants.{ AUDIO_FORMAT, KOMPLETE_AUDIO, MACBOOK_SPEAKERS }
 import dataline.input.captureSamples
 import dataline.output.playSamples
-import fs2.Stream
 import mixer.{ getMixer, getSourceDataLine, getTargetDataLine }
+import cats.effect.kernel.Resource
 
-import javax.sound.sampled.{ SourceDataLine, TargetDataLine }
-
-object Main extends IOApp.Simple:
-  def run: IO[Unit] = for {
-    inputLine  <- getMixer[IO](KOMPLETE_AUDIO).flatMap(_.getTargetDataLine)
-    outputLine <- getMixer[IO](MACBOOK_SPEAKERS).flatMap(_.getSourceDataLine)
-    _          <- signalStream(inputLine, outputLine).compile.drain
+object Main extends ResourceApp.Simple:
+  def run: Resource[IO, Unit] = for {
+    inputLine  <- Resource.eval(getMixer[IO](KOMPLETE_AUDIO).flatMap(_.getTargetDataLine))
+    outputLine <- Resource.eval(getMixer[IO](MACBOOK_SPEAKERS).flatMap(_.getSourceDataLine))
+    // reverb     <- pedals.reverbF[IO](2, 0.3)
+    // looper     <- pedals.looperF[IO](4)
+    delay      <- pedals.delayR[IO](0.3f, 2)
+    // delay      <- pedals.delayStart[IO](10)
+    _          <- Resource.eval(
+      inputLine
+        .captureSamples[IO](AUDIO_FORMAT)
+        .through(delay)
+        // .through(pedals.delayStart(5))
+        // .through(reverb)
+        // .through(pedals.delay(2, 0.3))
+        // .through(looper)
+        .through(outputLine.playSamples[IO](AUDIO_FORMAT)).compile.drain
+      )
   } yield ()
-
-  def signalStream(inputLine: TargetDataLine, outputLine: SourceDataLine): Stream[IO, Unit] =
-    inputLine
-      .captureSamples[IO](AUDIO_FORMAT)
-      // .through(pedals.overdrive(0.2))
-      // .through(pedals.tremolo(pedals.tremolo.waveforms.WaveFormType.Triangle, 2))
-      // .through(pedals.looper(4))
-      .through(pedals.delay(2, 0.3))
-      .through(outputLine.playSamples[IO](AUDIO_FORMAT))
