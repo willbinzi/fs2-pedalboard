@@ -8,7 +8,7 @@ import cats.syntax.functor.*
 import cats.syntax.flatMap.*
 import cats.syntax.semigroup.*
 
-def delay[F[_]](delayTimeInSeconds: Float, feedback: Float): Pedal[F] =
+def combFilter[F[_]](delayTimeInSeconds: Float, feedback: Float): Pedal[F] =
   val delayTimeInChunks = (delayTimeInSeconds * CHUNKS_PER_SECOND).toInt
   val delayBuffer = Array.fill[Chunk[Float]](delayTimeInChunks)(Chunk.array(Array.fill(FLOAT_BUFFER_SIZE)(0f)))
   _.scanChunks(0) { (n, chunk) =>
@@ -28,7 +28,7 @@ extension[F[_]] (stream: Stream[F, Chunk[Float]])
   def delayed(timeInSeconds: Float): Stream[F, Chunk[Float]] =
     silence(timeInSeconds) ++ stream
 
-def delayF[F[_]: Concurrent](repeatGain: Float, delayTimeInSeconds: Float): F[Pedal[F]] =
+def combFilterF[F[_]: Concurrent](repeatGain: Float, delayTimeInSeconds: Float): F[Pedal[F]] =
   Channel.unbounded[F, Chunk[Float]].map(repeatsChannel =>
     stream =>
       (
