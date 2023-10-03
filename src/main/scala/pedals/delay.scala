@@ -24,12 +24,16 @@ def silence[F[_]](timeInSeconds: Float): Stream[F, Chunk[Float]] =
   val silenceChunk = Chunk.array(silenceChunkArray)
   Stream.emit(silenceChunk).repeatN(delayTimeInChunks)
 
+extension[F[_]] (stream: Stream[F, Chunk[Float]])
+  def delayed(timeInSeconds: Float): Stream[F, Chunk[Float]] =
+    silence(timeInSeconds) ++ stream
+
 def delayF[F[_]: Concurrent](repeatGain: Float, delayTimeInSeconds: Float): F[Pedal[F]] =
-  Channel.unbounded[F, Chunk[Float]].map( repeatsChannel =>
+  Channel.unbounded[F, Chunk[Float]].map(repeatsChannel =>
     stream =>
       (
         stream.chunks |+|
-          (silence(delayTimeInSeconds) ++ repeatsChannel.stream.map(_ * repeatGain))
+        repeatsChannel.stream.map(_ * repeatGain).delayed(delayTimeInSeconds)
       ).evalTap(repeatsChannel.send)
       .unchunks
   )
@@ -40,11 +44,10 @@ def allPassFilterF[F[_]: Concurrent](repeatGain: Float, delayTimeInSeconds: Floa
     inputCopyChannel <- Channel.unbounded[F, Chunk[Float]]
   } yield {
     stream =>
-      (stream.chunks
-        .evalTap(inputCopyChannel.send)
-        .map(_ * (-repeatGain)) |+|
-          (silence(delayTimeInSeconds) ++ inputCopyChannel.stream) |+|
-          (silence(delayTimeInSeconds) ++ outputCopyChannel.stream.map(_ * repeatGain))
+      (
+        stream.chunks.evalTap(inputCopyChannel.send).map(_ * (-repeatGain)) |+|
+        inputCopyChannel.stream.delayed(delayTimeInSeconds) |+|
+        outputCopyChannel.stream.map(_ * repeatGain).delayed(delayTimeInSeconds)
       ).evalTap(outputCopyChannel.send)
       .unchunks
   }
