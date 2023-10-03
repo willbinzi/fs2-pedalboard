@@ -4,7 +4,7 @@ import cats.effect.kernel.syntax.resource.*
 import cats.effect.{ Concurrent, Resource }
 import pedals.routing.parallel
 
-def reverbR[F[_]: Concurrent]: Resource[F, Pedal[F]] =
+def reverbRepeatsR[F[_]: Concurrent](mix: Float): Resource[F, Pedal[F]] =
   for {
     comb1    <- combFilterF(0.742, 4.799).toResource
     comb2    <- combFilterF(0.733, 4.999).toResource
@@ -20,4 +20,11 @@ def reverbR[F[_]: Concurrent]: Resource[F, Pedal[F]] =
       .through(allPass2)
       .through(allPass3)
       .through(combs)
+      .map(_ * 0.8f)
   )
+
+def reverbR[F[_]: Concurrent]: Resource[F, Pedal[F]] =
+  for {
+    reverbRepeats <- reverbRepeatsR[F](0.8f)
+    withDry       <- parallel(passThrough, reverbRepeats)
+  } yield withDry

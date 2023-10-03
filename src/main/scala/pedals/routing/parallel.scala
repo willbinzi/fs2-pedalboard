@@ -8,14 +8,14 @@ import cats.syntax.applicative.*
 import cats.syntax.reducible.*
 import cats.syntax.traverse.*
 import fs2.concurrent.Topic
-import fs2.{ Chunk, Stream }
+import fs2.Chunk
 
 def parallel[F[_]: Concurrent](
   pedals: Pedal[F]*
 ): Resource[F, Pedal[F]] =
   NonEmptySeq.fromSeq(pedals).fold(
     // No pedals provided, so just pass through the input
-    identity[Stream[F, Float]].pure[Resource[F, *]]
+    passThrough.pure[Resource[F, *]]
   )(pedals =>
       for {
         topic   <- Topic[F, Chunk[Float]].toResource
