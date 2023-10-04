@@ -4,12 +4,12 @@ import cats.effect.kernel.syntax.resource.*
 import cats.effect.{ Concurrent, Resource }
 import pedals.routing.parallel
 
-def reverbRepeatsR[F[_]: Concurrent](mix: Float): Resource[F, Pedal[F]] =
+def reverbRepeatsR[F[_]: Concurrent](decay: Float, mix: Float): Resource[F, Pedal[F]] =
   for {
-    comb1    <- combFilterF(0.742, 4.799).toResource
-    comb2    <- combFilterF(0.733, 4.999).toResource
-    comb3    <- combFilterF(0.715, 5.399).toResource
-    comb4    <- combFilterF(0.697, 5.801).toResource
+    comb1    <- combFilterF(decay + 0.009f, 4.799).toResource
+    comb2    <- combFilterF(decay, 4.999).toResource
+    comb3    <- combFilterF(decay - 0.018f, 5.399).toResource
+    comb4    <- combFilterF(decay - 0.036f, 5.801).toResource
     combs    <- parallel(comb1, comb2, comb3, comb4)
     allPass1 <- allPassFilterF(0.7, 1.051).toResource
     allPass2 <- allPassFilterF(0.7, 0.337).toResource
@@ -23,8 +23,8 @@ def reverbRepeatsR[F[_]: Concurrent](mix: Float): Resource[F, Pedal[F]] =
       .map(_ * (mix * 0.25f)) // Divide by 4 to compensate for the 4 parallel comb filters
   )
 
-def reverbR[F[_]: Concurrent](mix: Float): Resource[F, Pedal[F]] =
+def reverbR[F[_]: Concurrent](decay: Float, mix: Float): Resource[F, Pedal[F]] =
   for {
-    reverbRepeats <- reverbRepeatsR[F](mix)
+    reverbRepeats <- reverbRepeatsR[F](decay, mix)
     withDry       <- parallel(passThrough, reverbRepeats)
   } yield withDry
