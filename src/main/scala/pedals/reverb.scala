@@ -20,11 +20,11 @@ def reverbRepeatsR[F[_]: Concurrent](mix: Float): Resource[F, Pedal[F]] =
       .through(allPass2)
       .through(allPass3)
       .through(combs)
-      .map(_ * 0.8f)
+      .map(_ * (mix * 0.25f)) // Divide by 4 to compensate for the 4 parallel comb filters
   )
 
-def reverbR[F[_]: Concurrent]: Resource[F, Pedal[F]] =
+def reverbR[F[_]: Concurrent](mix: Float): Resource[F, Pedal[F]] =
   for {
-    reverbRepeats <- reverbRepeatsR[F](0.8f)
+    reverbRepeats <- reverbRepeatsR[F](mix)
     withDry       <- parallel(passThrough, reverbRepeats)
   } yield withDry
