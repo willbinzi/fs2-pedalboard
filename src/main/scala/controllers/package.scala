@@ -11,10 +11,9 @@ import scala.concurrent.duration._
 
 def setUp[F[_]: Sync]: F[Unit] = Sync[F].delay {
   glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err))
-  if (!glfwInit()) {
-    throw new IllegalStateException("Unable to initialize GLFW");
-  } else println("GLFW initialized")
-  ()
+  if (!glfwInit())
+    throw new IllegalStateException("Unable to initialize GLFW")
+  else ()
 }
 
 class TriggerStr[F[_]: Sync : Temporal](ref: Ref[F, Float]) {
