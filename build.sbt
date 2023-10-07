@@ -26,6 +26,7 @@ bindgenBindings := Seq(
     .addCImport("portaudio.h")
     .build
 )
+import org.typelevel.scalacoptions.ScalacOptions
 
 lazy val root = project
   .in(file("."))
