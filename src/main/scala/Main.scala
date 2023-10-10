@@ -1,19 +1,18 @@
-import cats.effect.{ IO, Resource, ResourceApp }
-import constants.{ AUDIO_FORMAT, KOMPLETE_AUDIO, MACBOOK_SPEAKERS }
-import dataline.input.captureSamples
-import dataline.output.playSamples
-import mixer.{ getMixer, getSourceDataLine, getTargetDataLine }
+import cats.effect.{ IO, IOApp, Resource }
+import dataline.input.unpack.toSamples
 
-object Main extends ResourceApp.Simple:
-  def run: Resource[IO, Unit] = for {
-    inputLine  <- getMixer[IO](KOMPLETE_AUDIO).flatMap(_.getTargetDataLine).toResource
-    outputLine <- getMixer[IO](MACBOOK_SPEAKERS).flatMap(_.getSourceDataLine).toResource
-    reverb     <- pedals.reverbR[IO](0.733f, 0.1)
+object Main extends IOApp.Simple:
+  def run: IO[Unit] = appResource.use(_ => IO.unit)
+  def appResource: Resource[IO, Unit] = for {
+    _ <- portaudio.init[IO].toResource
+    _ <- portaudio.printDevices[IO].toResource
+    foo <- portaudio.inputOutput[IO].toResource
+    inputStream = foo._1
+    outputPipe = foo._2
+    outputPipe <- portaudio.output[IO].toResource
     _          <-
-      inputLine
-        .captureSamples[IO](AUDIO_FORMAT)
-        .through(reverb)
-        .through(outputLine.playSamples[IO](AUDIO_FORMAT))
+      inputStream
+        .through(outputPipe)
         .compile
         .drain
         .toResource

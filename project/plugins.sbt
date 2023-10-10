@@ -1,1 +1,3 @@
 addSbtPlugin("org.typelevel" % "sbt-tpolecat" % "0.5.0")
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.15")
+addSbtPlugin("com.indoorvivants" % "bindgen-sbt-plugin" % "0.0.20")

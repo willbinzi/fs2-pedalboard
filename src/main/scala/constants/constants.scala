@@ -1,6 +1,6 @@
 package constants
 
-import javax.sound.sampled.AudioFormat
+// import javax.sound.sampled.AudioFormat
 
 val MACBOOK_SPEAKERS: String = "MacBook Pro Speakers"
 val MACBOOK_MIC: String = "MacBook Pro Microphone"
@@ -13,13 +13,13 @@ val CHANNELS = 2
 val SIGNED = true
 val BIG_ENDIAN = false
 
-val AUDIO_FORMAT = new AudioFormat(
-  SAMPLE_RATE,
-  SAMPLE_SIZE_IN_BITS,
-  CHANNELS,
-  SIGNED,
-  BIG_ENDIAN
-)
+// val AUDIO_FORMAT = new AudioFormat(
+//   SAMPLE_RATE,
+//   SAMPLE_SIZE_IN_BITS,
+//   CHANNELS,
+//   SIGNED,
+//   BIG_ENDIAN
+// )
 
 val BYTES_BUFFER_SIZE: Int = 512
 val FLOAT_BUFFER_SIZE: Int = BYTES_BUFFER_SIZE / 2
