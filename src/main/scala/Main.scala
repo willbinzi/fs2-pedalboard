@@ -7,16 +7,13 @@ object Main extends IOApp.Simple:
     _ <- portaudio.init[IO].toResource
     // TODO: don't use global zone
     given Zone <- portaudio.zone[IO]
-    _ <- portaudio.streamPointer[IO]
-    _ <- IO.println("Should be running now").toResource
-    _ <- IO(Thread.sleep(90000)).toResource
-    // // outputPipe <- portaudio.output[IO].toResource
-    // _          <-
-    //   inputStream
-    //     // .through(toSamples)
-    //     .evalMapChunk(IO.println)
-    //     // .through(outputPipe)
-    //     .compile
-    //     .drain
-    //     .toResource
+    pointer <- portaudio.streamPointer[IO]
+    inputStream = portaudio.foo[IO](pointer)
+    outputPipe = portaudio.bar[IO](pointer)
+    _          <-
+      inputStream
+        .through(outputPipe)
+        .compile
+        .drain
+        .toResource
   } yield ()

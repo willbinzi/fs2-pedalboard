@@ -16,7 +16,6 @@ import bindgen.interface.Binding
 bindgenBindings := Seq(
   Binding
     .builder(
-      // Root / "opt" / "homebrew" / "opt" / "portaudio" / "include" / "portaudio.h",
       file("/opt/homebrew/opt/portaudio/include/portaudio.h"),
       "portaudio"
     )
