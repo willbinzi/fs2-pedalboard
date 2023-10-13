@@ -14,98 +14,70 @@ import portaudio.extern_functions.Pa_CloseStream
 import portaudio.extern_functions.Pa_StopStream
 import portaudio.extern_functions.Pa_Terminate
 import cats.effect.kernel.Resource
+import portaudio.extern_functions.Pa_ReadStream
+import portaudio.extern_functions.Pa_WriteStream
+import portaudio.structs.PaDeviceInfo
+import portaudio.extern_functions.Pa_GetDefaultInputDevice
+import portaudio.structs.PaStreamParameters
+import portaudio.extern_functions.Pa_GetDeviceInfo
+import portaudio.extern_functions.Pa_GetDefaultOutputDevice
+import portaudio.extern_functions.Pa_OpenStream
 
 val paFloat32 = aliases.PaSampleFormat(0x00000001.toULong)
+val paClipOff = aliases.PaStreamFlags(0x00000001.toULong)
+
+val FRAMES_PER_BUFFER = 256
 
 def zone[F[_]: Sync]: Resource[F, Zone]  =
   Resource.make[F, Zone](Sync[F].delay(Zone.open()))(z => Sync[F].delay(z.close()))
 
-// def streamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]] =
-def streamPointer[F[_]: Sync]: Resource[F, Ptr[PaStream]] =
+def streamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]] =
   Resource.make[F, Ptr[PaStream]](Sync[F].delay {
-    val streamPtrPtr: Ptr[Ptr[PaStream]] = stackalloc()
-    val callbackPtr: Ptr[Ptr[aliases.PaStreamCallback]] = stackalloc()
-    // TODO: WTF???
-    !callbackPtr = Boxes.boxToPtr(Boxes.unboxToPtr(CFuncPtr.toPtr(passthroughCallback)))
-
-    val err: PaError = Pa_OpenDefaultStream(
-      streamPtrPtr,
-      1,
+    val inputDevice = Pa_GetDefaultInputDevice()
+    val inputLatency = (!Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency
+    val inputParameters = PaStreamParameters(
+      inputDevice,
       1,
       paFloat32,
-      constants.SAMPLE_RATE,
-      256.toULong,
-      !callbackPtr,
+      inputLatency,
       null
-      // Boxes.boxToPtr[Byte](Boxes.unboxToPtr(userDataPointer))
     )
-    println("Opened stream")
+    val outputDevice = Pa_GetDefaultOutputDevice()
+    val outputLatency = (!Pa_GetDeviceInfo(outputDevice)).defaultLowOutputLatency
+    val outputParameters = PaStreamParameters(
+      outputDevice,
+      1,
+      paFloat32,
+      outputLatency,
+      null
+    )
+
+    val streamPtrPtr: Ptr[Ptr[PaStream]] = stackalloc()
+    val err: PaError = Pa_OpenStream(
+      streamPtrPtr,
+      inputParameters,
+      outputParameters,
+      constants.SAMPLE_RATE,
+      FRAMES_PER_BUFFER.toULong,
+      paClipOff,
+      null,
+      null
+    )
+
     if err != PaErrorCode.paNoError then
       throw new RuntimeException(s"Stream open terminated with exit code $err")
     val e: PaError = functions.Pa_StartStream(!streamPtrPtr)
     if e != PaErrorCode.paNoError then
       throw new RuntimeException(s"Stream start terminated with exit code $e")
-    println("Started stream")
+    val buffer: Ptr[Byte] = stackalloc[Byte](FRAMES_PER_BUFFER * 4)
+    while true do
+      Pa_ReadStream(!streamPtrPtr, buffer, FRAMES_PER_BUFFER.toULong)
+      Pa_WriteStream(!streamPtrPtr, buffer, 256.toULong)
+      ()
     !streamPtrPtr
   })(ptr => Sync[F].delay {
     Pa_StopStream(ptr)
-    println("Stopped stream")
     Pa_CloseStream(ptr)
-    println("Closed stream")
     Pa_Terminate()
-    println("Terminated portaudio")
+    ()
   })
-
-
-def passthrough(
-  input: Ptr[Byte],
-  output: Ptr[Byte],
-  frameCount: CUnsignedLongInt,
-  timeInfo: Ptr[PaStreamCallbackTimeInfo],
-  statusFlags: PaStreamCallbackFlags,
-  userData: Ptr[Byte]
-): Int =
-  var in: Ptr[Float] = Boxes.boxToPtr[Float](Boxes.unboxToPtr(input))
-  var out: Ptr[Float] = Boxes.boxToPtr[Float](Boxes.unboxToPtr(output))
-  for (i <- 0 to frameCount.toInt - 1)
-    !out = !in
-    in = in + 1
-    out = out + 1
-  0
-
-def sawtoothFn(
-  input: Ptr[Byte],
-  output: Ptr[Byte],
-  frameCount: CUnsignedLongInt,
-  timeInfo: Ptr[PaStreamCallbackTimeInfo],
-  statusFlags: PaStreamCallbackFlags,
-  userData: Ptr[Byte]
-): Int =
-  val data: Ptr[CStruct3[Float, Float, Long]] =
-    Boxes.boxToPtr[CStruct3[Float, Float, Long]](Boxes.unboxToPtr(userData))
-  var out: Ptr[Float] =
-    Boxes.boxToPtr[Float](Boxes.unboxToPtr(output))
-  // Technically this could cause weird behaviour if up if the frameCount is too big to be an Int
-  for (i <- 0 to frameCount.toInt - 1)
-    out = out + 1
-    !out = data._1
-    out = out + 1
-    !out = data._2
-
-    // Input for next iteration
-    data._1 = data._1 + 0.001f
-    // When signal reaches top, drop back down
-    if data._1 >= 0.2f then data._1 = -0.2f
-    // Higher pitch to distinguish left from right
-    data._2 = data._2 + 0.003f
-    // When signal reaches top, drop back down
-    if data._2 >= 0.2f then data._2 = -0.2f
-  data._3 = data._3 +1
-  println(s"Call count: ${data._3}")
-  0
-
-def passthroughCallback: aliases.PaStreamCallback =
-  CFuncPtr6.fromScalaFunction(passthrough)
-
-def playSawtoothCallback: aliases.PaStreamCallback =
-  CFuncPtr6.fromScalaFunction(sawtoothFn)
