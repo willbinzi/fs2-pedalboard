@@ -16,32 +16,32 @@ def printDevices[F[_]: Sync]: F[Unit] = Sync[F].delay {
   }
 }
 
-def inputStream[F[_]: Sync]: F[fs2.Stream[F, Byte]] =
-  val buffer = stackalloc[Byte](512)
-  val streamPointer: Ptr[Ptr[aliases.PaStream]] = stackalloc[Ptr[aliases.PaStream]]()
-  Sync[F].delay {
-    functions.Pa_OpenDefaultStream(
-      streamPointer,
-      1,
-      0,
-      // aliases.PaSampleFormat.paFloat32,
-      aliases.PaSampleFormat(0x00000008.toULong),  // aliases.PaSampleFormat.paFloat16
-      44100,
-      256.toULong,
-      null,
-      null
-    )
-    functions.Pa_StartStream(!streamPointer)
-    !streamPointer
-  }.map { streamPointer =>
-    fs2.Stream.repeatEval(Sync[F].delay {
-      // val buffer = stackalloc[Float](256)
-      functions.Pa_ReadStream(streamPointer, buffer, 256.toULong)
-      buffer
-    }).flatMap { buffer =>
-      fs2.Stream.emits((0 to 255).map(i => buffer(i).toByte))
-    }
-  }
+// def inputStream[F[_]: Sync]: F[fs2.Stream[F, Byte]] =
+//   val buffer = stackalloc[Byte](512)
+//   val streamPointer: Ptr[Ptr[aliases.PaStream]] = stackalloc[Ptr[aliases.PaStream]]()
+//   Sync[F].delay {
+//     functions.Pa_OpenDefaultStream(
+//       streamPointer,
+//       1,
+//       0,
+//       // aliases.PaSampleFormat.paFloat32,
+//       aliases.PaSampleFormat(0x00000008.toULong),  // aliases.PaSampleFormat.paFloat16
+//       44100,
+//       256.toULong,
+//       null,
+//       null
+//     )
+//     functions.Pa_StartStream(!streamPointer)
+//     !streamPointer
+//   }.map { streamPointer =>
+//     fs2.Stream.repeatEval(Sync[F].delay {
+//       // val buffer = stackalloc[Float](256)
+//       functions.Pa_ReadStream(streamPointer, buffer, 256.toULong)
+//       buffer
+//     }).flatMap { buffer =>
+//       fs2.Stream.emits((0 to 255).map(i => buffer(i).toByte))
+//     }
+//   }
 
 // def output[F[_]: Sync]: F[fs2.Pipe[F, Byte, Nothing]] =
 //   val buffer = stackalloc[Byte](512)
@@ -90,14 +90,14 @@ def inputOutput[F[_]: Sync]: F[(fs2.Stream[F, Byte], fs2.Pipe[F, Byte, Nothing])
       null
     )
     functions.Pa_StartStream(!streamPointer)
-  }.map { _ =>
+  }.as(
     (
       fs2.Stream.repeatEval(Sync[F].delay {
         // val buffer = stackalloc[Float](256)
         functions.Pa_ReadStream(!streamPointer, inputBuffer, 256.toULong)
         inputBuffer
       }).flatMap { buffer =>
-        fs2.Stream.emits((0 to 255).map(i => buffer(i).toByte))
+        fs2.Stream.emits((0 to 255).map(i => buffer(i)))
       },
       _.chunks.evalMap { chunk =>
         Sync[F].delay {
@@ -109,7 +109,7 @@ def inputOutput[F[_]: Sync]: F[(fs2.Stream[F, Byte], fs2.Pipe[F, Byte, Nothing])
         }
       }.drain
     )
-  }
+  )
 
   // def play[F[_]]: fs2.Pipe[F, Byte, Unit] =
   //   _.evalMap { byte =>
