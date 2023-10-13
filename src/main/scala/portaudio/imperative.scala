@@ -20,9 +20,13 @@ val paFloat32 = aliases.PaSampleFormat(0x00000001.toULong)
 def zone[F[_]: Sync]: Resource[F, Zone]  =
   Resource.make[F, Zone](Sync[F].delay(Zone.open()))(z => Sync[F].delay(z.close()))
 
-def streamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]] =
-  Resource.make[F, Ptr[PaStream]](Sync[F].delay{
-    val streamPtrPtr: Ptr[Ptr[PaStream]] = alloc() // or alloc to put it on the heap? I genuinely have no idea what is more appropriate
+// def streamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]] =
+def streamPointer[F[_]: Sync]: Resource[F, Ptr[PaStream]] =
+  Resource.make[F, Ptr[PaStream]](Sync[F].delay {
+    val streamPtrPtr: Ptr[Ptr[PaStream]] = stackalloc()
+    val callbackPtr: Ptr[Ptr[aliases.PaStreamCallback]] = stackalloc()
+    // TODO: WTF???
+    !callbackPtr = Boxes.boxToPtr(Boxes.unboxToPtr(CFuncPtr.toPtr(passthroughCallback)))
 
     val err: PaError = Pa_OpenDefaultStream(
       streamPtrPtr,
@@ -31,9 +35,7 @@ def streamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]] =
       paFloat32,
       constants.SAMPLE_RATE,
       256.toULong,
-      // TODO: WTF???
-      // Boxes.boxToPtr(Boxes.unboxToPtr(CFuncPtr.toPtr(playSawtoothCallback))),
-      Boxes.boxToPtr(Boxes.unboxToPtr(CFuncPtr.toPtr(passthroughCallback))),
+      !callbackPtr,
       null
       // Boxes.boxToPtr[Byte](Boxes.unboxToPtr(userDataPointer))
     )

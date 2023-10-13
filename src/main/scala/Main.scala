@@ -5,10 +5,9 @@ object Main extends IOApp.Simple:
   def run: IO[Unit] = appResource.use(_ => IO.unit)
   def appResource: Resource[IO, Unit] = for {
     _ <- portaudio.init[IO].toResource
-    given Zone <- portaudio.zone[IO]
     _ <- portaudio.streamPointer[IO]
-    _ <- IO(Thread.sleep(30000)).toResource
     _ <- IO.println("Should be running now").toResource
+    _ <- IO(Thread.sleep(90000)).toResource
     // _ <- portaudio.printDevices[IO].toResource
     // foo <- portaudio.inputOutput[IO].toResource
     // inputStream = foo._1
