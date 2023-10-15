@@ -22,6 +22,7 @@ import portaudio.extern_functions.Pa_GetDefaultOutputDevice
 import portaudio.extern_functions.Pa_OpenStream
 import fs2.Chunk
 import fs2.Stream
+import scala.reflect.ClassTag
 
 val paFloat32 = aliases.PaSampleFormat(0x00000001.toULong)
 val paClipOff = aliases.PaStreamFlags(0x00000001.toULong)
@@ -95,7 +96,8 @@ def inputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Stream[F, Float]]
     val floatBuffer: Ptr[Float] = Boxes.boxToPtr(Boxes.unboxToPtr(buffer))
     fs2.Pull.eval(F.blocking {
       Pa_ReadStream(pStream, buffer, FRAMES_PER_BUFFER.toULong)
-      pointer(floatBuffer, FRAMES_PER_BUFFER)
+      // pointer(floatBuffer, FRAMES_PER_BUFFER)
+      arrayChunk(floatBuffer, FRAMES_PER_BUFFER)
     }).flatMap(fs2.Pull.output).streamNoScope.repeat
   )
 
@@ -138,5 +140,12 @@ case class Pointer[O: Tag](pointer: Ptr[O], offset: Int, length: Int) extends Ch
     Pointer(pointer, offset, n) -> Pointer(pointer, offset + n, length - n)
 }
 
-def pointer[O: Tag](pointer: Ptr[O], length: Int): Chunk[O] =
+def pointerChunk[O: Tag](pointer: Ptr[O], length: Int): Chunk[O] =
   Pointer(pointer, 0, length)
+
+def arrayChunk[O: Tag: ClassTag](pointer: Ptr[O], length: Int): Chunk[O] =
+  val array = new Array[O](length)
+  (0 until length).foreach(i =>
+    array(i) = pointer(i)
+  )
+  Chunk.array(array)
