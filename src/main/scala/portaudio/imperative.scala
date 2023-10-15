@@ -102,20 +102,19 @@ def inputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Stream[F, Float]]
   )
 
 def outputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Pipe[F, Float, Nothing]] =
+  // TODO: Does this really need to be in the global zone?
+  val floats = alloc[Float](FRAMES_PER_BUFFER)
   outputStreamPointer.map(pStream =>
     _.chunks.foreach { chunk =>
       val floatBuffer: Ptr[Float] =
         if chunk.isInstanceOf[Pointer[Float]] then
           chunk.asInstanceOf[Pointer[Float]].pointer
         else
-          // Note: stackalloc here creates horrible noise for some reason
-          val floats = alloc[Float](FRAMES_PER_BUFFER)
-          for i <- 0 until (chunk.size - 1) do
+          for i <- 0 until chunk.size do
             floats(i) = chunk(i)
           floats
-      val buffer: Ptr[Byte] = Boxes.boxToPtr(Boxes.unboxToPtr(floatBuffer))
       F.blocking {
-        Pa_WriteStream(pStream, buffer, FRAMES_PER_BUFFER.toULong)
+        Pa_WriteStream(pStream, Boxes.boxToPtr(Boxes.unboxToPtr(floatBuffer)), FRAMES_PER_BUFFER.toULong)
         ()
       }
     }
@@ -136,7 +135,6 @@ case class Pointer[O: Tag](pointer: Ptr[O], offset: Int, length: Int) extends Ch
       i += 1
       j += 1
     }
-
 
   def splitAtChunk_(n: Int): (Chunk[O], Chunk[O]) =
     Pointer(pointer, offset, n) -> Pointer(pointer, offset + n, length - n)
