@@ -80,56 +80,28 @@ def outputStreamPointer[F[_]: Sync](using Zone): Resource[F, Ptr[PaStream]] =
 
 def inputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Stream[F, Float]] =
   inputStreamPointer.map(pStream =>
-    val buffer: Ptr[Byte] = alloc[Byte](FRAMES_PER_BUFFER * 4)
-    val floatBuffer: Ptr[Float] = Boxes.boxToPtr(Boxes.unboxToPtr(buffer))
+    val floatBuffer: Ptr[Float] = alloc[Float](FRAMES_PER_BUFFER)
+    val byteBuffer: Ptr[Byte] = Boxes.boxToPtr(Boxes.unboxToPtr(floatBuffer))
     Pull.eval(F.blocking {
-      functions.Pa_ReadStream(pStream, buffer, FRAMES_PER_BUFFER.toULong)
-      // pointer(floatBuffer, FRAMES_PER_BUFFER)
+      functions.Pa_ReadStream(pStream, byteBuffer, FRAMES_PER_BUFFER.toULong)
       arrayChunk(floatBuffer, FRAMES_PER_BUFFER)
     }).flatMap(Pull.output).streamNoScope.repeat
   )
 
 def outputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Pipe[F, Float, Nothing]] =
-  // TODO: Does this really need to be in the global zone?
-  val floats = alloc[Float](FRAMES_PER_BUFFER)
   outputStreamPointer.map(pStream =>
+    // TODO: Does this really need to be in the global zone?
+    val floatBuffer = alloc[Float](FRAMES_PER_BUFFER)
     _.chunks.foreach { chunk =>
-      val floatBuffer: Ptr[Float] =
-        if chunk.isInstanceOf[Pointer[Float]] then
-          chunk.asInstanceOf[Pointer[Float]].pointer
-        else
-          for i <- 0 until chunk.size do
-            floats(i) = chunk(i)
-          floats
+      (0 until chunk.size).foreach(i =>
+        floatBuffer(i) = chunk(i)
+      )
       F.blocking {
         functions.Pa_WriteStream(pStream, Boxes.boxToPtr(Boxes.unboxToPtr(floatBuffer)), FRAMES_PER_BUFFER.toULong)
         ()
       }
     }
   )
-
-case class Pointer[O: Tag](pointer: Ptr[O], offset: Int, length: Int) extends Chunk[O] {
-  def size = length
-  def apply(i: Int): O =
-    if (i < 0 || i >= size) throw new IndexOutOfBoundsException()
-    else pointer(offset + i)
-
-  def copyToArray[O2 >: O](xs: Array[O2], start: Int): Unit =
-    var i = start
-    var j = offset
-    val end = size
-    while (j < end) {
-      xs(i) = pointer(j)
-      i += 1
-      j += 1
-    }
-
-  def splitAtChunk_(n: Int): (Chunk[O], Chunk[O]) =
-    Pointer(pointer, offset, n) -> Pointer(pointer, offset + n, length - n)
-}
-
-def pointerChunk[O: Tag](pointer: Ptr[O], length: Int): Chunk[O] =
-  Pointer(pointer, 0, length)
 
 def arrayChunk[O: Tag: ClassTag](pointer: Ptr[O], length: Int): Chunk[O] =
   val array = new Array[O](length)
