@@ -6,8 +6,8 @@ import scala.scalanative.build._
 
 // defaults set with common options shown
 nativeConfig ~= { c =>
-  c.withLTO(LTO.none) // thin
-    .withMode(Mode.debug) // releaseFast
+  c.withLTO(LTO.full) // thin
+    .withMode(Mode.releaseFull) // releaseFast
     .withGC(GC.immix) // commix
 }
 
@@ -20,10 +20,9 @@ bindgenBindings := Seq(
       "portaudio"
     )
     .withLinkName("portaudio")
-    .addCImport("portaudio.h") /* 3 */
+    .addCImport("portaudio.h")
     .build
 )
-
 
 lazy val root = project
   .in(file("."))

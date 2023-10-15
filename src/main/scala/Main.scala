@@ -9,8 +9,12 @@ object Main extends IOApp.Simple:
     given Zone <- portaudio.zone[IO]
     output <- portaudio.outputR[IO]
     input <- portaudio.inputR[IO]
+    drive <- pedals.overdrive.blended[IO](0, 0.1)
+    reverb <- pedals.reverbR[IO](0.7, 0.5)
     _          <-
       input
+        .through(drive)
+        .through(reverb)
         .through(output)
         .compile
         .drain
