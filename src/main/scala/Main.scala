@@ -7,12 +7,11 @@ object Main extends IOApp.Simple:
     _ <- portaudio.init[IO].toResource
     // TODO: don't use global zone
     given Zone <- portaudio.zone[IO]
-    pointer <- portaudio.streamPointer[IO]
-    inputStream = portaudio.foo[IO](pointer)
-    outputPipe = portaudio.bar[IO](pointer)
+    output <- portaudio.outputR[IO]
+    input <- portaudio.inputR[IO]
     _          <-
-      inputStream
-        .through(outputPipe)
+      input
+        .through(output)
         .compile
         .drain
         .toResource
