@@ -1,6 +1,7 @@
 package portaudio
 
 import cats.effect.Sync
+import cats.syntax.functor.*
 import fs2.Pipe
 import scala.scalanative.unsafe.*
 import portaudio.aliases.PaStream
@@ -10,7 +11,6 @@ import portaudio.enumerations.PaErrorCode
 import scala.scalanative.runtime.Boxes
 import portaudio.extern_functions.Pa_CloseStream
 import portaudio.extern_functions.Pa_StopStream
-import portaudio.extern_functions.Pa_Terminate
 import cats.effect.kernel.Resource
 import portaudio.extern_functions.Pa_ReadStream
 import portaudio.extern_functions.Pa_WriteStream
@@ -31,22 +31,15 @@ val FRAMES_PER_BUFFER = 256
 def zone[F[_]: Sync]: Resource[F, Zone]  =
   Resource.make[F, Zone](Sync[F].delay(Zone.open()))(z => Sync[F].delay(z.close()))
 
-def inputStreamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]] =
-  Resource.make[F, Ptr[PaStream]](Sync[F].delay {
-    val inputDevice = Pa_GetDefaultInputDevice()
-    val inputLatency = (!Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency
-    val inputParameters = PaStreamParameters(
-      inputDevice,
-      1,
-      paFloat32,
-      inputLatency,
-      null
-    )
-    val streamPtrPtr: Ptr[Ptr[PaStream]] = stackalloc()
+def unsafeOpenStream(
+  ppStream: Ptr[Ptr[PaStream]],
+  inputParams: Ptr[PaStreamParameters],
+  outputParams: Ptr[PaStreamParameters]
+  ): Ptr[PaStream] =
     val err: PaError = Pa_OpenStream(
-      streamPtrPtr,
-      inputParameters,
-      null,
+      ppStream,
+      inputParams,
+      outputParams,
       constants.SAMPLE_RATE,
       FRAMES_PER_BUFFER.toULong,
       paClipOff,
@@ -56,22 +49,37 @@ def inputStreamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]]
 
     if err != PaErrorCode.paNoError then
       throw new RuntimeException(s"Stream open terminated with exit code $err")
-    val e: PaError = functions.Pa_StartStream(!streamPtrPtr)
+    val e: PaError = functions.Pa_StartStream(!ppStream)
     if e != PaErrorCode.paNoError then
       throw new RuntimeException(s"Stream start terminated with exit code $e")
-    !streamPtrPtr
-  })(ptr => Sync[F].delay {
-    Pa_StopStream(ptr)
-    Pa_CloseStream(ptr)
-    Pa_Terminate()
-    ()
-  })
+    !ppStream
+
+def closeStream[F[_]: Sync](pStream: Ptr[PaStream]): F[Unit] =
+  Sync[F].delay {
+    Pa_StopStream(pStream)
+    Pa_CloseStream(pStream)
+  }.void
+
+def inputStreamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]] =
+  Resource.make[F, Ptr[PaStream]](Sync[F].delay {
+    val inputDevice = Pa_GetDefaultInputDevice()
+    val inputLatency = (!Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency
+    val inputParams = PaStreamParameters(
+      inputDevice,
+      1,
+      paFloat32,
+      inputLatency,
+      null
+    )
+    val ppStream: Ptr[Ptr[PaStream]] = stackalloc()
+    unsafeOpenStream(ppStream, inputParams, null)
+  })(closeStream)
 
 def outputStreamPointer[F[_]: Sync](using Zone): Resource[F, Ptr[PaStream]] =
   Resource.make[F, Ptr[PaStream]](Sync[F].delay {
     val outputDevice = Pa_GetDefaultOutputDevice()
     val outputLatency = (!Pa_GetDeviceInfo(outputDevice)).defaultLowOutputLatency
-    val outputParameters = PaStreamParameters(
+    val outputParams = PaStreamParameters(
       outputDevice,
       1,
       paFloat32,
@@ -79,30 +87,9 @@ def outputStreamPointer[F[_]: Sync](using Zone): Resource[F, Ptr[PaStream]] =
       null
     )
 
-    val streamPtrPtr: Ptr[Ptr[PaStream]] = stackalloc()
-    val err: PaError = Pa_OpenStream(
-      streamPtrPtr,
-      null,
-      outputParameters,
-      constants.SAMPLE_RATE,
-      FRAMES_PER_BUFFER.toULong,
-      paClipOff,
-      null,
-      null
-    )
-
-    if err != PaErrorCode.paNoError then
-      throw new RuntimeException(s"Stream open terminated with exit code $err")
-    val e: PaError = functions.Pa_StartStream(!streamPtrPtr)
-    if e != PaErrorCode.paNoError then
-      throw new RuntimeException(s"Stream start terminated with exit code $e")
-    !streamPtrPtr
-  })(ptr => Sync[F].delay {
-    Pa_StopStream(ptr)
-    Pa_CloseStream(ptr)
-    Pa_Terminate()
-    ()
-  })
+    val ppStream: Ptr[Ptr[PaStream]] = stackalloc()
+    unsafeOpenStream(ppStream, null, outputParams)
+  })(closeStream)
 
 def inputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Stream[F, Float]] =
   inputStreamPointer.map(pStream =>
@@ -119,9 +106,10 @@ def outputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Pipe[F, Float, N
     _.chunks.foreach { chunk =>
       val floatBuffer: Ptr[Float] =
         if chunk.isInstanceOf[Pointer[Float]] then
-          chunk.asInstanceOf[Pointer[Float]].values
+          chunk.asInstanceOf[Pointer[Float]].pointer
         else
-          val floats = stackalloc[Float](FRAMES_PER_BUFFER)
+          // Note: stackalloc here creates horrible noise for some reason
+          val floats = alloc[Float](FRAMES_PER_BUFFER)
           for i <- 0 until (chunk.size - 1) do
             floats(i) = chunk(i)
           floats
@@ -133,26 +121,26 @@ def outputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Pipe[F, Float, N
     }
   )
 
-case class Pointer[O: Tag](values: Ptr[O], offset: Int, length: Int) extends Chunk[O] {
+case class Pointer[O: Tag](pointer: Ptr[O], offset: Int, length: Int) extends Chunk[O] {
   def size = length
   def apply(i: Int): O =
     if (i < 0 || i >= size) throw new IndexOutOfBoundsException()
-    else values(offset + i)
+    else pointer(offset + i)
 
   def copyToArray[O2 >: O](xs: Array[O2], start: Int): Unit =
     var i = start
     var j = offset
     val end = size
     while (j < end) {
-      xs(i) = values(j)
+      xs(i) = pointer(j)
       i += 1
       j += 1
     }
 
 
   def splitAtChunk_(n: Int): (Chunk[O], Chunk[O]) =
-    Pointer(values, offset, n) -> Pointer(values, offset + n, length - n)
+    Pointer(pointer, offset, n) -> Pointer(pointer, offset + n, length - n)
 }
 
-def pointer[O: Tag](values: Ptr[O], length: Int): Chunk[O] =
-  Pointer(values, 0, length)
+def pointer[O: Tag](pointer: Ptr[O], length: Int): Chunk[O] =
+  Pointer(pointer, 0, length)
