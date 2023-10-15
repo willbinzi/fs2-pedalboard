@@ -1,28 +1,16 @@
 package portaudio
 
-import cats.effect.Sync
+import cats.effect.{ Resource, Sync }
 import cats.syntax.functor.*
-import fs2.Pipe
-import scala.scalanative.unsafe.*
-import portaudio.aliases.PaStream
-import portaudio.aliases.PaError
-import scalanative.unsigned.UnsignedRichInt
+import fs2.{ Chunk, Pipe, Pull, Stream }
+import portaudio.aliases.{ PaError, PaStream }
 import portaudio.enumerations.PaErrorCode
-import scala.scalanative.runtime.Boxes
-import portaudio.extern_functions.Pa_CloseStream
-import portaudio.extern_functions.Pa_StopStream
-import cats.effect.kernel.Resource
-import portaudio.extern_functions.Pa_ReadStream
-import portaudio.extern_functions.Pa_WriteStream
-import portaudio.structs.PaDeviceInfo
-import portaudio.extern_functions.Pa_GetDefaultInputDevice
-import portaudio.structs.PaStreamParameters
-import portaudio.extern_functions.Pa_GetDeviceInfo
-import portaudio.extern_functions.Pa_GetDefaultOutputDevice
-import portaudio.extern_functions.Pa_OpenStream
-import fs2.Chunk
-import fs2.Stream
+import portaudio.structs.{ PaDeviceInfo, PaStreamParameters }
+
 import scala.reflect.ClassTag
+import scala.scalanative.runtime.Boxes
+import scala.scalanative.unsafe.*
+import scala.scalanative.unsigned.UnsignedRichInt
 
 val paFloat32 = aliases.PaSampleFormat(0x00000001.toULong)
 val paClipOff = aliases.PaStreamFlags(0x00000001.toULong)
@@ -37,7 +25,7 @@ def unsafeOpenStream(
   inputParams: Ptr[PaStreamParameters],
   outputParams: Ptr[PaStreamParameters]
   ): Ptr[PaStream] =
-    val err: PaError = Pa_OpenStream(
+    val err: PaError = functions.Pa_OpenStream(
       ppStream,
       inputParams,
       outputParams,
@@ -57,14 +45,14 @@ def unsafeOpenStream(
 
 def closeStream[F[_]: Sync](pStream: Ptr[PaStream]): F[Unit] =
   Sync[F].delay {
-    Pa_StopStream(pStream)
-    Pa_CloseStream(pStream)
+    functions.Pa_StopStream(pStream)
+    functions.Pa_CloseStream(pStream)
   }.void
 
 def inputStreamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]] =
   Resource.make[F, Ptr[PaStream]](Sync[F].delay {
-    val inputDevice = Pa_GetDefaultInputDevice()
-    val inputLatency = (!Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency
+    val inputDevice = functions.Pa_GetDefaultInputDevice()
+    val inputLatency = (!functions.Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency
     val inputParams = PaStreamParameters(
       inputDevice,
       1,
@@ -77,8 +65,8 @@ def inputStreamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]]
 
 def outputStreamPointer[F[_]: Sync](using Zone): Resource[F, Ptr[PaStream]] =
   Resource.make[F, Ptr[PaStream]](Sync[F].delay {
-    val outputDevice = Pa_GetDefaultOutputDevice()
-    val outputLatency = (!Pa_GetDeviceInfo(outputDevice)).defaultLowOutputLatency
+    val outputDevice = functions.Pa_GetDefaultOutputDevice()
+    val outputLatency = (!functions.Pa_GetDeviceInfo(outputDevice)).defaultLowOutputLatency
     val outputParams = PaStreamParameters(
       outputDevice,
       1,
@@ -94,11 +82,11 @@ def inputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Stream[F, Float]]
   inputStreamPointer.map(pStream =>
     val buffer: Ptr[Byte] = alloc[Byte](FRAMES_PER_BUFFER * 4)
     val floatBuffer: Ptr[Float] = Boxes.boxToPtr(Boxes.unboxToPtr(buffer))
-    fs2.Pull.eval(F.blocking {
-      Pa_ReadStream(pStream, buffer, FRAMES_PER_BUFFER.toULong)
+    Pull.eval(F.blocking {
+      functions.Pa_ReadStream(pStream, buffer, FRAMES_PER_BUFFER.toULong)
       // pointer(floatBuffer, FRAMES_PER_BUFFER)
       arrayChunk(floatBuffer, FRAMES_PER_BUFFER)
-    }).flatMap(fs2.Pull.output).streamNoScope.repeat
+    }).flatMap(Pull.output).streamNoScope.repeat
   )
 
 def outputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Pipe[F, Float, Nothing]] =
@@ -114,7 +102,7 @@ def outputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Pipe[F, Float, N
             floats(i) = chunk(i)
           floats
       F.blocking {
-        Pa_WriteStream(pStream, Boxes.boxToPtr(Boxes.unboxToPtr(floatBuffer)), FRAMES_PER_BUFFER.toULong)
+        functions.Pa_WriteStream(pStream, Boxes.boxToPtr(Boxes.unboxToPtr(floatBuffer)), FRAMES_PER_BUFFER.toULong)
         ()
       }
     }
