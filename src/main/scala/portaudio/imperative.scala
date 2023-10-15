@@ -6,8 +6,6 @@ import portaudio.aliases.PaStream
 import portaudio.aliases.PaError
 import portaudio.extern_functions.Pa_OpenDefaultStream
 import scalanative.unsigned.UnsignedRichInt
-import portaudio.structs.PaStreamCallbackTimeInfo
-import portaudio.aliases.PaStreamCallbackFlags
 import portaudio.enumerations.PaErrorCode
 import scala.scalanative.runtime.Boxes
 import portaudio.extern_functions.Pa_CloseStream
@@ -23,7 +21,6 @@ import portaudio.extern_functions.Pa_GetDeviceInfo
 import portaudio.extern_functions.Pa_GetDefaultOutputDevice
 import portaudio.extern_functions.Pa_OpenStream
 import fs2.Chunk
-import scala.reflect.ClassTag
 
 val paFloat32 = aliases.PaSampleFormat(0x00000001.toULong)
 val paClipOff = aliases.PaStreamFlags(0x00000001.toULong)
@@ -88,12 +85,18 @@ def foo[F[_]](pStream: Ptr[PaStream])(using Zone)(implicit F: Sync[F]): fs2.Stre
   }).flatMap(fs2.Pull.output).streamNoScope.repeat
 
 def bar[F[_]](pStream: Ptr[PaStream])(using Zone)(implicit F: Sync[F]): fs2.Pipe[F, Float, Nothing] =
-  val floatBuffer: Ptr[Float] = alloc[Float](FRAMES_PER_BUFFER)
-  val buffer: Ptr[Byte] = Boxes.boxToPtr(Boxes.unboxToPtr(floatBuffer))
   _.chunks.foreach { chunk =>
+    val floatBuffer: Ptr[Float] =
+      if chunk.isInstanceOf[Pointer[Float]] then
+        chunk.asInstanceOf[Pointer[Float]].values
+      else
+        // TODO: This is a legit memory leak
+        val floats = alloc[Float](FRAMES_PER_BUFFER)
+        for i <- 0 until (chunk.size - 1) do
+          floats(i) = chunk(i)
+        throw new RuntimeException("Fuck")
+    val buffer: Ptr[Byte] = Boxes.boxToPtr(Boxes.unboxToPtr(floatBuffer))
     F.blocking {
-      for i <- 0 until (chunk.size - 1) do
-        floatBuffer(i) = chunk(i)
       Pa_WriteStream(pStream, buffer, FRAMES_PER_BUFFER.toULong)
       ()
     }
