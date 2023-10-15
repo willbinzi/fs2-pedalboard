@@ -71,8 +71,7 @@ def inputStreamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]]
       inputLatency,
       null
     )
-    val ppStream: Ptr[Ptr[PaStream]] = stackalloc()
-    unsafeOpenStream(ppStream, inputParams, null)
+    unsafeOpenStream(stackalloc(), inputParams, null)
   })(closeStream)
 
 def outputStreamPointer[F[_]: Sync](using Zone): Resource[F, Ptr[PaStream]] =
@@ -87,8 +86,7 @@ def outputStreamPointer[F[_]: Sync](using Zone): Resource[F, Ptr[PaStream]] =
       null
     )
 
-    val ppStream: Ptr[Ptr[PaStream]] = stackalloc()
-    unsafeOpenStream(ppStream, null, outputParams)
+    unsafeOpenStream(stackalloc(), null, outputParams)
   })(closeStream)
 
 def inputR[F[_]](using Zone)(implicit F: Sync[F]): Resource[F, Stream[F, Float]] =
