@@ -8,16 +8,6 @@ import cats.syntax.functor.*
 import cats.syntax.flatMap.*
 import cats.syntax.semigroup.*
 
-def combFilter[F[_]](delayTimeInSeconds: Float, feedback: Float): Pedal[F] =
-  val delayTimeInChunks = (delayTimeInSeconds * CHUNKS_PER_SECOND).toInt
-  val delayBuffer = Array.fill[Chunk[Float]](delayTimeInChunks)(Chunk.array(Array.fill(FLOAT_BUFFER_SIZE)(0f)))
-  _.scanChunks(0) { (n, chunk) =>
-    val i = n % delayTimeInChunks
-    val wetChunk = chunk.zipWith(delayBuffer(i))( _ + _ * feedback)
-    delayBuffer(i) = wetChunk
-    ((n + 1) % delayTimeInChunks, wetChunk)
-  }
-
 def silence[F[_]](timeInSeconds: Float): Stream[F, Chunk[Float]] =
   val delayTimeInChunks = (timeInSeconds * CHUNKS_PER_SECOND).toInt
   val silenceChunkArray = Array.fill(FLOAT_BUFFER_SIZE)(0f)

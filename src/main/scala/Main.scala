@@ -4,11 +4,11 @@ import scala.scalanative.unsafe.Zone
 object Main extends IOApp.Simple:
   def run: IO[Unit] = appResource.use(_ => IO.unit)
   def appResource: Resource[IO, Unit] = for {
-    _ <- portaudio.init[IO]
+    _ <- io.initPortaudio[IO]
     // TODO: don't use global zone
-    given Zone <- portaudio.zone[IO]
-    output <- portaudio.outputR[IO]
-    input <- portaudio.inputR[IO]
+    given Zone <- io.zone[IO]
+    output <- io.outputR[IO]
+    input <- io.inputR[IO]
     drive <- pedals.overdrive.blended[IO](0, 0.1)
     reverb <- pedals.reverbR[IO](0.7, 0.5)
     _          <-
