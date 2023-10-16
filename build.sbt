@@ -6,9 +6,12 @@ import scala.scalanative.build._
 
 // defaults set with common options shown
 nativeConfig ~= { c =>
-  c.withLTO(LTO.full) // thin
-    .withMode(Mode.releaseFull) // releaseFast
-    .withGC(GC.immix) // commix
+  c.withLTO(LTO.full)
+    .withMode(Mode.releaseFull)
+    .withGC(GC.immix)
+  // c.withLTO(LTO.none)
+  //   .withMode(Mode.debug)
+  //   .withGC(GC.none)
 }
 
 import bindgen.interface.Binding

@@ -7,8 +7,9 @@ object Main extends IOApp.Simple:
     _ <- io.initPortaudio[IO]
     // TODO: don't use global zone
     given Zone <- io.zone[IO]
-    output <- io.outputR[IO]
-    input <- io.inputR[IO]
+    pStream <- io.inputOutputStreamPointer[IO]
+    input = io.inputStreamFromPointer[IO](pStream)
+    output = io.outputPipeFromPointer[IO](pStream)
     drive <- pedals.overdrive.blended[IO](0, 0.1)
     reverb <- pedals.reverbR[IO](0.7, 0.5)
     _          <-
