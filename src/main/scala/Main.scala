@@ -1,22 +1,16 @@
 import cats.effect.{ IO, IOApp, Resource }
-import scala.scalanative.unsafe.Zone
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] = appResource.use(_ => IO.unit)
   def appResource: Resource[IO, Unit] = for {
-    _ <- io.initPortaudio[IO]
-    // TODO: don't use global zone
-    given Zone <- io.zone[IO]
-    pStream <- io.inputOutputStreamPointer[IO]
-    input = io.inputStreamFromPointer[IO](pStream)
-    output = io.outputPipeFromPointer[IO](pStream)
+    audioSuite <- io.AudioSuite.default[IO]
     drive <- pedals.overdrive.blended[IO](0, 0.1)
     reverb <- pedals.reverbR[IO](0.7, 0.5)
     _          <-
-      input
+      audioSuite.input
         .through(drive)
         .through(reverb)
-        .through(output)
+        .through(audioSuite.output)
         .compile
         .drain
         .toResource
