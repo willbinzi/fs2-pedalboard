@@ -27,7 +27,7 @@ def parallel[F[_]: Concurrent](
         _
           .chunks
           .evalMap(topic.publish1)
-          .zipRight(streams.reduceMap(_.chunks))
+          .parZipWith(streams.reduceMap(_.chunks))((_, b) => b)
           .unchunks
       )
     )
