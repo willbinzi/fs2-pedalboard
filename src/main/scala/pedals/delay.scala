@@ -1,9 +1,9 @@
 package pedals
 
 import cats.effect.Concurrent
-import constants.{ CHUNKS_PER_SECOND, FLOAT_BUFFER_SIZE }
+import constants.{CHUNKS_PER_SECOND, FLOAT_BUFFER_SIZE}
 import fs2.concurrent.Channel
-import fs2.{ Chunk, Stream }
+import fs2.{Chunk, Stream}
 import cats.syntax.functor.*
 import cats.syntax.flatMap.*
 import cats.syntax.semigroup.*
@@ -14,30 +14,37 @@ def silence[F[_]](timeInSeconds: Float): Stream[F, Chunk[Float]] =
   val silenceChunk = Chunk.array(silenceChunkArray)
   Stream.emit(silenceChunk).repeatN(delayTimeInChunks)
 
-extension[F[_]] (stream: Stream[F, Chunk[Float]])
+extension [F[_]](stream: Stream[F, Chunk[Float]])
   def delayed(timeInSeconds: Float): Stream[F, Chunk[Float]] =
     silence(timeInSeconds) ++ stream
 
-def combFilterF[F[_]: Concurrent](repeatGain: Float, delayTimeInSeconds: Float): F[Pedal[F]] =
-  Channel.unbounded[F, Chunk[Float]].map(repeatsChannel =>
-    stream =>
-      (
-        stream.chunks |+|
-        repeatsChannel.stream.map(_ * repeatGain).delayed(delayTimeInSeconds)
-      ).evalTap(repeatsChannel.send)
-      .unchunks
-  )
+def combFilterF[F[_]: Concurrent](
+    repeatGain: Float,
+    delayTimeInSeconds: Float
+): F[Pedal[F]] =
+  Channel
+    .unbounded[F, Chunk[Float]]
+    .map(repeatsChannel =>
+      stream =>
+        (
+          stream.chunks |+|
+            repeatsChannel.stream
+              .map(_ * repeatGain)
+              .delayed(delayTimeInSeconds)
+        ).evalTap(repeatsChannel.send).unchunks
+    )
 
-def allPassFilterF[F[_]: Concurrent](repeatGain: Float, delayTimeInSeconds: Float): F[Pedal[F]] =
+def allPassFilterF[F[_]: Concurrent](
+    repeatGain: Float,
+    delayTimeInSeconds: Float
+): F[Pedal[F]] =
   for {
     outputCopyChannel <- Channel.unbounded[F, Chunk[Float]]
     inputCopyChannel <- Channel.unbounded[F, Chunk[Float]]
-  } yield {
-    stream =>
-      (
-        stream.chunks.evalTap(inputCopyChannel.send).map(_ * (-repeatGain)) |+|
+  } yield { stream =>
+    (
+      stream.chunks.evalTap(inputCopyChannel.send).map(_ * (-repeatGain)) |+|
         inputCopyChannel.stream.delayed(delayTimeInSeconds) |+|
         outputCopyChannel.stream.map(_ * repeatGain).delayed(delayTimeInSeconds)
-      ).evalTap(outputCopyChannel.send)
-      .unchunks
+    ).evalTap(outputCopyChannel.send).unchunks
   }

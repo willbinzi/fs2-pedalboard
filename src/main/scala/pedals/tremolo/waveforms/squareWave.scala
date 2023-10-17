@@ -1,7 +1,7 @@
 package pedals.tremolo.waveforms
 
 import constants.CHUNKS_PER_SECOND
-import fs2.{ Stream, Pure }
+import fs2.{Stream, Pure}
 import pedals.tremolo.waveforms.util.waveSection
 
 def squareWave(cycleLengthInSeconds: Float): Stream[Pure, Float] =

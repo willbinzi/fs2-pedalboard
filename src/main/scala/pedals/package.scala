@@ -1,6 +1,6 @@
 package pedals
 
-import fs2.{ Pipe, Stream }
+import fs2.{Pipe, Stream}
 
 type Pedal[F[_]] = Pipe[F, Float, Float]
 
