@@ -1,7 +1,7 @@
 package io
 
-import cats.effect.{ Resource, Sync }
-import fs2.{ Pipe, Stream }
+import cats.effect.{Resource, Sync}
+import fs2.{Pipe, Stream}
 
 import scala.scalanative.unsafe.Zone
 

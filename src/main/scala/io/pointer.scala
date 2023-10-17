@@ -3,7 +3,7 @@ package io
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.syntax.functor.*
-import portaudio.aliases.{ PaError, PaStream }
+import portaudio.aliases.{PaError, PaStream}
 import portaudio.enumerations.PaErrorCode
 import portaudio.functions
 import portaudio.structs.PaStreamParameters
@@ -15,9 +15,9 @@ import scala.scalanative.unsigned.UnsignedRichInt
 val FRAMES_PER_BUFFER = 256
 
 private def unsafeOpenStream(
-ppStream: Ptr[Ptr[PaStream]],
-inputParams: Ptr[PaStreamParameters],
-outputParams: Ptr[PaStreamParameters]
+    ppStream: Ptr[Ptr[PaStream]],
+    inputParams: Ptr[PaStreamParameters],
+    outputParams: Ptr[PaStreamParameters]
 ): Ptr[PaStream] =
   val err: PaError = functions.Pa_OpenStream(
     ppStream,
@@ -43,10 +43,13 @@ private def closeStream[F[_]: Sync](pStream: Ptr[PaStream]): F[Unit] =
     functions.Pa_CloseStream(pStream)
   }.void
 
-def inputOutputStreamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaStream]] =
+def inputOutputStreamPointer[F[_]: Sync](using
+    zone: Zone
+): Resource[F, Ptr[PaStream]] =
   Resource.make[F, Ptr[PaStream]](Sync[F].delay {
     val inputDevice = functions.Pa_GetDefaultInputDevice()
-    val inputLatency = (!functions.Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency
+    val inputLatency =
+      (!functions.Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency
     val inputParams = PaStreamParameters(
       inputDevice,
       1,
@@ -55,7 +58,8 @@ def inputOutputStreamPointer[F[_]: Sync](using zone: Zone): Resource[F, Ptr[PaSt
       null
     )
     val outputDevice = functions.Pa_GetDefaultOutputDevice()
-    val outputLatency = (!functions.Pa_GetDeviceInfo(outputDevice)).defaultLowOutputLatency
+    val outputLatency =
+      (!functions.Pa_GetDeviceInfo(outputDevice)).defaultLowOutputLatency
     val outputParams = PaStreamParameters(
       outputDevice,
       1,
