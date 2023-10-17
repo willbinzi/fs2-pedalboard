@@ -6,12 +6,12 @@ import scala.scalanative.build._
 
 // defaults set with common options shown
 nativeConfig ~= { c =>
-  c.withLTO(LTO.full)
-    .withMode(Mode.releaseFull)
-    .withGC(GC.immix)
-  // c.withLTO(LTO.none)
-  //   .withMode(Mode.debug)
-  //   .withGC(GC.none)
+  // c.withLTO(LTO.full)
+  //   .withMode(Mode.releaseFull)
+  //   .withGC(GC.immix)
+  c.withLTO(LTO.none)
+    .withMode(Mode.debug)
+    .withGC(GC.none)
 }
 
 import bindgen.interface.Binding
@@ -24,9 +24,16 @@ bindgenBindings := Seq(
     )
     .withLinkName("portaudio")
     .addCImport("portaudio.h")
+    .build,
+  Binding
+    .builder(
+      file("/opt/homebrew/Cellar/glfw/3.3.8/include/glfw/glfw3.h"),
+      "glfw"
+    )
+    .withLinkName("glfw")
+    .addCImport("glfw3.h")
     .build
 )
-import org.typelevel.scalacoptions.ScalacOptions
 
 lazy val root = project
   .in(file("."))

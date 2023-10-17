@@ -16,6 +16,6 @@ def blended[F[_]: Concurrent](
     threshold: Float
 ): Resource[F, Pedal[F]] =
   parallel(
-    passThrough andThen (_.map(_ * (1 - overdriveFactor))),
+    (_.map(_ * (1 - overdriveFactor))),
     asymmetricClipping(threshold) andThen (_.map(_ * overdriveFactor))
   )

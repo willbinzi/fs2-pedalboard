@@ -22,5 +22,5 @@ extension (chunk: Chunk[Float])
   def *(scalar: Float): Chunk[Float] =
     chunk.map(_ * scalar)
 
-  def * (that: Chunk[Float]): Chunk[Float] =
+  def *(that: Chunk[Float]): Chunk[Float] =
     chunk.zipWith(that)(_ * _)
