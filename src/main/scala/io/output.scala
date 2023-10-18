@@ -15,8 +15,8 @@ def outputPipeFromPointer[F[_]](pStream: Ptr[PaStream])(using Zone)(implicit
   val pFloat: Ptr[Float] = alloc[Float](FRAMES_PER_BUFFER)
   val pByte: Ptr[Byte] = pFloat.toBytePointer
   _.chunks.foreach { chunk =>
-    (0 until chunk.size).foreach(i => pFloat(i) = chunk(i))
     F.blocking {
+      (0 until chunk.size).foreach(i => pFloat(i) = chunk(i))
       functions.Pa_WriteStream(pStream, pByte, FRAMES_PER_BUFFER.toULong)
       ()
     }
