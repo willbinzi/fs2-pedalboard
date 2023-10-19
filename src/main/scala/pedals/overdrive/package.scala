@@ -12,10 +12,10 @@ def symmetricClipping[F[_]](threshold: Float): Pedal[F] =
   _.map(sample => math.min(math.max(sample, -threshold), threshold))
 
 def blended[F[_]: Concurrent](
-    overdriveFactor: Float,
+    blend: Float,
     threshold: Float
 ): Resource[F, Pedal[F]] =
   parallel(
-    passThrough andThen (_.map(_ * (1 - overdriveFactor))),
-    asymmetricClipping(threshold) andThen (_.map(_ * overdriveFactor))
+    _.map(_ * (1 - blend)),
+    symmetricClipping(threshold) andThen (_.map(_ * blend))
   )
