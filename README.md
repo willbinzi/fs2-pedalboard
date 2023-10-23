@@ -4,6 +4,11 @@ fs2-pedalboard is a small audio processing app that was created as an idea for a
 
 It currently provides implementations of tremolo, overdrive, delay and reverb effects.
 
+### Requirements
+The project is compiled using scala native. See [here](https://scala-native.org/en/latest/user/setup.html) for instructions on how to set up a working environment.
+
+The project also uses [portaudio](https://www.portaudio.com/) for input and output. On Mac, `brew install portaudio`  should take care of this dependency. On other operating systems, you will need to install portaudio and then edit [this line](https://github.com/willbinzi/fs2-pedalboard/blob/main/build.sbt#L22) to point to `portaudio.h` on your system.
+
 ### Usage
 
 This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
