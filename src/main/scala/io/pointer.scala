@@ -3,6 +3,7 @@ package io
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.syntax.functor.*
+import constants.FRAMES_PER_BUFFER
 import portaudio.aliases.{PaError, PaStream}
 import portaudio.enumerations.PaErrorCode
 import portaudio.functions
@@ -11,8 +12,6 @@ import portaudio.structs.PaStreamParameters
 import scala.scalanative.runtime.Boxes
 import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.UnsignedRichInt
-
-val FRAMES_PER_BUFFER = 256
 
 private def unsafeOpenStream(
     ppStream: Ptr[Ptr[PaStream]],

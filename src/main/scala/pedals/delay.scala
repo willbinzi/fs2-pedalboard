@@ -1,7 +1,7 @@
 package pedals
 
 import cats.effect.Concurrent
-import constants.{CHUNKS_PER_SECOND, FLOAT_BUFFER_SIZE}
+import constants.{CHUNKS_PER_SECOND, FRAMES_PER_BUFFER}
 import fs2.concurrent.Channel
 import fs2.{Chunk, Stream}
 import cats.syntax.functor.*
@@ -10,7 +10,7 @@ import cats.syntax.semigroup.*
 
 def silence[F[_]](timeInSeconds: Float): Stream[F, Chunk[Float]] =
   val delayTimeInChunks = (timeInSeconds * CHUNKS_PER_SECOND).toInt
-  val silenceChunkArray = Array.fill(FLOAT_BUFFER_SIZE)(0f)
+  val silenceChunkArray = Array.fill(FRAMES_PER_BUFFER)(0f)
   val silenceChunk = Chunk.array(silenceChunkArray)
   Stream.emit(silenceChunk).repeatN(delayTimeInChunks)
 

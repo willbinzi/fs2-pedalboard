@@ -2,6 +2,7 @@ package io
 
 import cats.effect.Sync
 import cats.syntax.functor.*
+import constants.FRAMES_PER_BUFFER
 import fs2.Pipe
 import portaudio.aliases.PaStream
 import portaudio.functions
