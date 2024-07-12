@@ -15,8 +15,3 @@ def initPortaudio[F[_]: Sync]: Resource[F, Unit] =
   Resource.make(Sync[F].delay(functions.Pa_Initialize()).void)(_ =>
     Sync[F].delay(functions.Pa_Terminate()).void
   )
-
-def zone[F[_]: Sync]: Resource[F, Zone] =
-  Resource.make[F, Zone](Sync[F].delay(Zone.open()))(z =>
-    Sync[F].delay(z.close())
-  )

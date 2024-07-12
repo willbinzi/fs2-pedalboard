@@ -10,9 +10,9 @@ import portaudio.functions
 import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.UnsignedRichInt
 
-def outputPipeFromPointer[F[_]](pStream: Ptr[PaStream])(using Zone)(implicit
+def outputPipeFromPointer[F[_]](pStream: Ptr[PaStream])(implicit
     F: Sync[F]
-): Pipe[F, Float, Nothing] =
+): Pipe[F, Float, Nothing] = Zone { implicit z =>
   val pFloat: Ptr[Float] = alloc[Float](FRAMES_PER_BUFFER)
   val pByte: Ptr[Byte] = pFloat.toBytePointer
   _.chunks.foreach { chunk =>
@@ -22,3 +22,4 @@ def outputPipeFromPointer[F[_]](pStream: Ptr[PaStream])(using Zone)(implicit
       ()
     }
   }
+}

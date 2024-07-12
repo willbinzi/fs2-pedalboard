@@ -11,12 +11,13 @@ trait AudioSuite[F[_]] {
 }
 
 object AudioSuite {
-  def default[F[_]: Sync]: Resource[F, AudioSuite[F]] = for {
-    _ <- initPortaudio[F]
-    given Zone <- zone[F]
-    pStream <- io.inputOutputStreamPointer[F]
-  } yield new AudioSuite[F] {
-    def input: Stream[F, Float] = inputStreamFromPointer[F](pStream)
-    def output: Pipe[F, Float, Nothing] = outputPipeFromPointer[F](pStream)
+  def default[F[_]: Sync]: Resource[F, AudioSuite[F]] = Zone { implicit z =>
+    for {
+      _ <- initPortaudio[F]
+      pStream <- io.inputOutputStreamPointer[F]
+    } yield new AudioSuite[F] {
+      def input: Stream[F, Float] = inputStreamFromPointer[F](pStream)
+      def output: Pipe[F, Float, Nothing] = outputPipeFromPointer[F](pStream)
+    }
   }
 }
