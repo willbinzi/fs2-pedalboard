@@ -42,10 +42,8 @@ private def closeStream[F[_]: Sync](pStream: Ptr[PaStream]): F[Unit] =
     functions.Pa_CloseStream(pStream)
   }.void
 
-def inputOutputStreamPointer[F[_]: Sync](using
-    zone: Zone
-): Resource[F, Ptr[PaStream]] =
-  Resource.make[F, Ptr[PaStream]](Sync[F].delay {
+def inputOutputStreamPointer[F[_]: Sync]: Resource[F, Ptr[PaStream]] =
+  Resource.make[F, Ptr[PaStream]](Sync[F].delay(Zone { implicit z =>
     val inputDevice = functions.Pa_GetDefaultInputDevice()
     val inputLatency =
       (!functions.Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency
@@ -67,7 +65,7 @@ def inputOutputStreamPointer[F[_]: Sync](using
       null
     )
     unsafeOpenStream(stackalloc(), inputParams, outputParams)
-  })(closeStream)
+  }))(closeStream)
 
 extension (pFloat: Ptr[Float])
   def toBytePointer: Ptr[Byte] =

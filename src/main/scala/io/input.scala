@@ -1,7 +1,6 @@
 package io
 
 import cats.effect.Sync
-import cats.syntax.functor.*
 import constants.FRAMES_PER_BUFFER
 import fs2.{Chunk, Pull, Stream}
 import portaudio.aliases.PaStream
@@ -10,10 +9,10 @@ import portaudio.functions
 import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.UnsignedRichInt
 
-def inputStreamFromPointer[F[_]](pStream: Ptr[PaStream])(using Zone)(implicit
+def inputStreamFromPointer[F[_]](pStream: Ptr[PaStream])(implicit
     F: Sync[F]
 ): Stream[F, Float] =
-  val pFloat: Ptr[Float] = alloc[Float](FRAMES_PER_BUFFER)
+  val pFloat: Ptr[Float] = stackalloc[Float](FRAMES_PER_BUFFER)
   val pByte: Ptr[Byte] = pFloat.toBytePointer
   Pull
     .eval(F.blocking {
