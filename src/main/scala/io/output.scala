@@ -1,7 +1,6 @@
 package io
 
 import cats.effect.Sync
-import cats.syntax.functor.*
 import constants.FRAMES_PER_BUFFER
 import fs2.Pipe
 import portaudio.aliases.PaStream
@@ -12,8 +11,8 @@ import scala.scalanative.unsigned.UnsignedRichInt
 
 def outputPipeFromPointer[F[_]](pStream: Ptr[PaStream])(implicit
     F: Sync[F]
-): Pipe[F, Float, Nothing] = Zone { implicit z =>
-  val pFloat: Ptr[Float] = alloc[Float](FRAMES_PER_BUFFER)
+): Pipe[F, Float, Nothing] =
+  val pFloat: Ptr[Float] = stackalloc[Float](FRAMES_PER_BUFFER)
   val pByte: Ptr[Byte] = pFloat.toBytePointer
   _.chunks.foreach { chunk =>
     F.blocking {
@@ -22,4 +21,3 @@ def outputPipeFromPointer[F[_]](pStream: Ptr[PaStream])(implicit
       ()
     }
   }
-}
