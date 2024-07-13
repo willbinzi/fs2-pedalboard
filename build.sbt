@@ -1,10 +1,9 @@
-val scala3Version = "3.4.2"
+val scala3Version = "3.3.1"
 
 enablePlugins(ScalaNativePlugin, BindgenPlugin)
 
 import scala.scalanative.build._
 
-// defaults set with common options shown
 nativeConfig ~= { c =>
   c.withLTO(LTO.full)
     .withMode(Mode.releaseFull)
