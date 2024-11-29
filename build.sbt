@@ -16,14 +16,11 @@ nativeConfig ~= { c =>
 import bindgen.interface.Binding
 
 bindgenBindings := Seq(
-  Binding
-    .builder(
+  Binding(
       file("/opt/homebrew/opt/portaudio/include/portaudio.h"),
       "portaudio"
     )
     .withLinkName("portaudio")
-    .addCImport("portaudio.h")
-    .build
 )
 
 lazy val root = project
