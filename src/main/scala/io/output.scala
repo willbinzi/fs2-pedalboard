@@ -17,7 +17,7 @@ def outputPipeFromPointer[F[_]](pStream: Ptr[PaStream])(implicit
   _.chunks.foreach { chunk =>
     F.blocking {
       (0 until chunk.size).foreach(i => pFloat(i) = chunk(i))
-      functions.Pa_WriteStream(pStream, pByte, FRAMES_PER_BUFFER.toULong)
+      functions.Pa_WriteStream(pStream, pByte, FRAMES_PER_BUFFER.toCSize)
       ()
     }
   }

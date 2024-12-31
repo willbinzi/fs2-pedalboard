@@ -16,7 +16,7 @@ def inputStreamFromPointer[F[_]](pStream: Ptr[PaStream])(implicit
   val pByte: Ptr[Byte] = pFloat.toBytePointer
   Pull
     .eval(F.blocking {
-      functions.Pa_ReadStream(pStream, pByte, FRAMES_PER_BUFFER.toULong)
+      functions.Pa_ReadStream(pStream, pByte, FRAMES_PER_BUFFER.toCSize)
       arrayChunk(pFloat, FRAMES_PER_BUFFER)
     })
     .flatMap(Pull.output)

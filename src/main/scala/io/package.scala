@@ -8,8 +8,8 @@ import portaudio.functions
 import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.UnsignedRichInt
 
-val paFloat32 = aliases.PaSampleFormat(0x00000001.toULong)
-val paClipOff = aliases.PaStreamFlags(0x00000001.toULong)
+val paFloat32 = aliases.PaSampleFormat(0x00000001.toCSize)
+val paClipOff = aliases.PaStreamFlags(0x00000001.toCSize)
 
 def initPortaudio[F[_]: Sync]: Resource[F, Unit] =
   Resource.make(Sync[F].delay(functions.Pa_Initialize()).void)(_ =>

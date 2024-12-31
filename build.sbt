@@ -38,8 +38,7 @@ lazy val root = project
     name := "pedalboard",
     version := "0.1.0-SNAPSHOT",
     scalaVersion := scala3Version,
-    libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.5.1",
-    libraryDependencies += "co.fs2"        %%% "fs2-core"    % "3.9.2",
-    libraryDependencies += "co.fs2"        %%% "fs2-io"      % "3.9.2",
+    libraryDependencies += ("org.typelevel" %%% "cats-effect" % "3.7-0b545af").cross(CrossVersion.for3Use2_13),
+    libraryDependencies += ("co.fs2"        %%% "fs2-core"    % "3.12-2d1232c-20241231T120325Z-SNAPSHOT").cross(CrossVersion.for3Use2_13),
     Compile / scalacOptions -= "-Xfatal-warnings"
   )

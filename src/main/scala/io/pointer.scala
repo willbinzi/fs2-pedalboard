@@ -23,7 +23,7 @@ private def unsafeOpenStream(
     inputParams,
     outputParams,
     constants.SAMPLE_RATE,
-    FRAMES_PER_BUFFER.toULong,
+    FRAMES_PER_BUFFER.toCSize,
     paClipOff,
     null,
     null
@@ -43,7 +43,7 @@ private def closeStream[F[_]: Sync](pStream: Ptr[PaStream]): F[Unit] =
   }.void
 
 def inputOutputStreamPointer[F[_]: Sync]: Resource[F, Ptr[PaStream]] =
-  Resource.make[F, Ptr[PaStream]](Sync[F].delay(Zone { implicit z =>
+  Resource.make[F, Ptr[PaStream]](Sync[F].delay(Zone {// implicit z:  =>
     val inputDevice = functions.Pa_GetDefaultInputDevice()
     val inputLatency =
       (!functions.Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency
