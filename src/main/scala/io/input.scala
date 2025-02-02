@@ -12,10 +12,10 @@ import scala.scalanative.unsigned.UnsignedRichInt
 def inputStreamFromPointer[F[_]](pStream: Ptr[PaStream])(implicit
     F: Sync[F]
 ): Stream[F, Float] =
-  val pFloat: Ptr[Float] = stackalloc[Float](FRAMES_PER_BUFFER)
-  val pByte: Ptr[Byte] = pFloat.toBytePointer
   Pull
     .eval(F.blocking {
+      val pFloat: Ptr[Float] = stackalloc[Float](FRAMES_PER_BUFFER)
+      val pByte: Ptr[Byte] = pFloat.toBytePointer
       functions.Pa_ReadStream(pStream, pByte, FRAMES_PER_BUFFER.toCSize)
       arrayChunk(pFloat, FRAMES_PER_BUFFER)
     })

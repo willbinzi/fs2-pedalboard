@@ -12,10 +12,10 @@ import scala.scalanative.unsigned.UnsignedRichInt
 def outputPipeFromPointer[F[_]](pStream: Ptr[PaStream])(implicit
     F: Sync[F]
 ): Pipe[F, Float, Nothing] =
-  val pFloat: Ptr[Float] = stackalloc[Float](FRAMES_PER_BUFFER)
-  val pByte: Ptr[Byte] = pFloat.toBytePointer
   _.chunks.foreach { chunk =>
     F.blocking {
+      val pFloat: Ptr[Float] = stackalloc[Float](FRAMES_PER_BUFFER)
+      val pByte: Ptr[Byte] = pFloat.toBytePointer
       (0 until chunk.size).foreach(i => pFloat(i) = chunk(i))
       functions.Pa_WriteStream(pStream, pByte, FRAMES_PER_BUFFER.toCSize)
       ()

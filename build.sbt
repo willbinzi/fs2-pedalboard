@@ -1,4 +1,4 @@
-val scala3Version = "3.3.1"
+val scala3Version = "3.3.4"
 
 enablePlugins(VcpkgNativePlugin, ScalaNativePlugin, BindgenPlugin)
 
@@ -38,7 +38,7 @@ lazy val root = project
     name := "pedalboard",
     version := "0.1.0-SNAPSHOT",
     scalaVersion := scala3Version,
-    libraryDependencies += ("org.typelevel" %%% "cats-effect" % "3.7-0b545af").cross(CrossVersion.for3Use2_13),
-    libraryDependencies += ("co.fs2"        %%% "fs2-core"    % "3.12-2d1232c-20241231T120325Z-SNAPSHOT").cross(CrossVersion.for3Use2_13),
+    libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.7-2eee55d",
+    libraryDependencies += "co.fs2"        %%% "fs2-core"    % "3.12-2d1232c-20250201T130258Z-SNAPSHOT",
     Compile / scalacOptions -= "-Xfatal-warnings"
   )
