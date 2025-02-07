@@ -7,7 +7,7 @@ It currently provides implementations of tremolo, overdrive, delay and reverb ef
 ### Project setup
 The project is compiled using scala native. See [here](https://scala-native.org/en/latest/user/setup.html) for instructions on how to set up a working environment.
 
-The project also uses [portaudio](https://www.portaudio.com/) for input and output. On Mac, `brew install portaudio`  should take care of this dependency. On other operating systems, you will need to install portaudio and then edit [this line](https://github.com/willbinzi/fs2-pedalboard/blob/main/build.sbt#L22) to point to `portaudio.h` on your system.
+The project also uses [portaudio](https://www.portaudio.com/) for input and output. To manage this dependency, it uses [sn-vcpkg](https://github.com/indoorvivants/sn-vcpkg). This, in turn requires the dependencies mentioned [here](https://github.com/indoorvivants/sn-vcpkg?tab=readme-ov-file#docker-base-image).
 
 ### Usage
 
