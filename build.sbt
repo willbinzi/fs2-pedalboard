@@ -1,27 +1,36 @@
 val scala3Version = "3.3.1"
 
-enablePlugins(ScalaNativePlugin, BindgenPlugin)
+enablePlugins(VcpkgNativePlugin, ScalaNativePlugin, BindgenPlugin)
+
+vcpkgDependencies := VcpkgDependencies(
+  "portaudio"
+)
+
 
 import scala.scalanative.build._
 
-nativeConfig ~= { c =>
-  c.withLTO(LTO.full)
-    .withMode(Mode.releaseFull)
-    .withGC(GC.immix)
-  // c.withLTO(LTO.none)
-  //   .withMode(Mode.debug)
-  //   .withGC(GC.none)
+nativeConfig ~= {
+  _.withLTO(LTO.full)
+  .withMode(Mode.releaseFull)
+  .withGC(GC.immix)
+}
+
+vcpkgNativeConfig ~= {
+  _.withRenamedLibraries(Map("portaudio" -> "portaudio-2.0"))
 }
 
 import bindgen.interface.Binding
 
-bindgenBindings := Seq(
-  Binding(
-      file("/opt/homebrew/opt/portaudio/include/portaudio.h"),
-      "portaudio"
-    )
-    .withLinkName("portaudio")
-)
+bindgenBindings := {
+  val configurator = vcpkgConfigurator.value
+  Seq(
+    Binding(
+        configurator.includes("portaudio") / "portaudio.h",
+        "portaudio"
+      )
+      .withLinkName("portaudio")
+  )
+}
 
 lazy val root = project
   .in(file("."))
