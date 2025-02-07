@@ -10,8 +10,8 @@ vcpkgDependencies := VcpkgDependencies(
 import scala.scalanative.build._
 
 nativeConfig ~= {
-  _.withLTO(LTO.none)
-  .withMode(Mode.debug)
+  _.withLTO(LTO.full)
+  .withMode(Mode.releaseFull)
   .withGC(GC.immix)
 }
 
