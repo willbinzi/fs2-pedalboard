@@ -1,6 +1,6 @@
-## fs2-pedalboard
+## arpeggio
 
-fs2-pedalboard is a small audio processing app that was created as an idea for a talk. It's currently nowhere near as polished as it should be...
+arpeggio is a small audio processing app that was created as an idea for a talk. It's currently nowhere near as polished as it should be...
 
 It currently provides implementations of tremolo, overdrive, delay and reverb effects.
 
