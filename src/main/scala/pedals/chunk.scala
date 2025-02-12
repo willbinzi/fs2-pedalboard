@@ -4,7 +4,7 @@ import cats.Semigroup
 import cats.effect.Concurrent
 import fs2.{Chunk, Stream}
 
-implicit def streamPointwiseAddChunks[F[_]: Concurrent]
+given streamPointwiseAddChunks[F[_]: Concurrent]
     : Semigroup[Stream[F, Chunk[Float]]] =
   new Semigroup[Stream[F, Chunk[Float]]]:
     def combine(

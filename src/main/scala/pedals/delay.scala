@@ -10,8 +10,7 @@ import cats.syntax.semigroup.*
 
 def silence[F[_]](timeInSeconds: Float): Stream[F, Chunk[Float]] =
   val delayTimeInChunks = (timeInSeconds * CHUNKS_PER_SECOND).toInt
-  val silenceChunkArray = Array.fill(FRAMES_PER_BUFFER)(0f)
-  val silenceChunk = Chunk.array(silenceChunkArray)
+  val silenceChunk = Chunk.ArraySlice(Array.fill(FRAMES_PER_BUFFER)(0f), 0, FRAMES_PER_BUFFER)
   Stream.emit(silenceChunk).repeatN(delayTimeInChunks)
 
 extension [F[_]](stream: Stream[F, Chunk[Float]])

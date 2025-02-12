@@ -35,7 +35,7 @@ bindgenBindings := {
 lazy val root = project
   .in(file("."))
   .settings(
-    name := "pedalboard",
+    name := "arpeggio",
     version := "0.1.0-SNAPSHOT",
     scalaVersion := scala3Version,
     libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.7-2eee55d",
