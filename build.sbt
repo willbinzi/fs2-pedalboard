@@ -12,7 +12,7 @@ import scala.scalanative.build._
 nativeConfig ~= {
   _.withLTO(LTO.full)
   .withMode(Mode.releaseFull)
-  .withGC(GC.immix)
+  .withGC(GC.commix)
 }
 
 vcpkgNativeConfig ~= {
@@ -35,7 +35,7 @@ bindgenBindings := {
 lazy val root = project
   .in(file("."))
   .settings(
-    name := "pedalboard",
+    name := "arpeggio",
     version := "0.1.0-SNAPSHOT",
     scalaVersion := scala3Version,
     libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.5.1",
