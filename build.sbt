@@ -41,5 +41,6 @@ lazy val root = project
     libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.5.1",
     libraryDependencies += "co.fs2"        %%% "fs2-core"    % "3.9.2",
     libraryDependencies += "co.fs2"        %%% "fs2-io"      % "3.9.2",
+    scalafmtOnCompile := true,
     Compile / scalacOptions -= "-Xfatal-warnings"
   )
