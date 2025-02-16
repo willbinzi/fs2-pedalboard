@@ -1,4 +1,4 @@
-package io
+package io.portaudio
 
 import cats.effect.{Resource, Sync}
 import cats.syntax.functor.*

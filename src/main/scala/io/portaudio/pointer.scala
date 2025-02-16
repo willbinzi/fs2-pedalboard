@@ -1,4 +1,4 @@
-package io
+package io.portaudio
 
 import cats.effect.Resource
 import cats.effect.Sync
@@ -9,7 +9,6 @@ import cbindings.portaudio.functions
 import cbindings.portaudio.structs.PaStreamParameters
 import constants.FRAMES_PER_BUFFER
 
-import scala.scalanative.runtime.Boxes
 import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.UnsignedRichInt
 
@@ -66,7 +65,3 @@ def inputOutputStreamPointer[F[_]: Sync]: Resource[F, Ptr[PaStream]] =
     )
     unsafeOpenStream(stackalloc(), inputParams, outputParams)
   }))(closeStream)
-
-extension (pFloat: Ptr[Float])
-  def toBytePointer: Ptr[Byte] =
-    Boxes.boxToPtr(Boxes.unboxToPtr(pFloat))
