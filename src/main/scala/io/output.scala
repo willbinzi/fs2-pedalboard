@@ -14,10 +14,13 @@ def outputPipeFromPointer[F[_]](pStream: Ptr[PaStream])(implicit
 ): Pipe[F, Float, Nothing] =
   _.chunks.foreach { chunk =>
     F.blocking {
-      val pFloat: Ptr[Float] = stackalloc[Float](FRAMES_PER_BUFFER)
-      val pByte: Ptr[Byte] = pFloat.toBytePointer
-      (0 until chunk.size).foreach(i => pFloat(i) = chunk(i))
-      functions.Pa_WriteStream(pStream, pByte, FRAMES_PER_BUFFER.toCSize)
+      val buffer = new Array[Float](FRAMES_PER_BUFFER)
+      chunk.copyToArray(buffer, 0)
+      functions.Pa_WriteStream(
+        pStream,
+        buffer.atUnsafe(0).toBytePointer,
+        FRAMES_PER_BUFFER.toCSize
+      )
       ()
     }
   }

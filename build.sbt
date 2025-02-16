@@ -12,7 +12,7 @@ import scala.scalanative.build._
 nativeConfig ~= {
   _.withLTO(LTO.full)
   .withMode(Mode.releaseFull)
-  .withGC(GC.immix)
+  .withGC(GC.commix)
 }
 
 vcpkgNativeConfig ~= {
@@ -40,5 +40,6 @@ lazy val root = project
     scalaVersion := scala3Version,
     libraryDependencies += "org.typelevel" %%% "cats-effect" % "3.7-2eee55d",
     libraryDependencies += "co.fs2"        %%% "fs2-core"    % "3.12-2d1232c-20250201T130258Z-SNAPSHOT",
+    scalafmtOnCompile := true,
     Compile / scalacOptions -= "-Xfatal-warnings"
   )
