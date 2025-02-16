@@ -3,11 +3,11 @@ package io
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.syntax.functor.*
+import cbindings.portaudio.aliases.{PaError, PaStream}
+import cbindings.portaudio.enumerations.PaErrorCode
+import cbindings.portaudio.functions
+import cbindings.portaudio.structs.PaStreamParameters
 import constants.FRAMES_PER_BUFFER
-import portaudio.aliases.{PaError, PaStream}
-import portaudio.enumerations.PaErrorCode
-import portaudio.functions
-import portaudio.structs.PaStreamParameters
 
 import scala.scalanative.runtime.Boxes
 import scala.scalanative.unsafe.*

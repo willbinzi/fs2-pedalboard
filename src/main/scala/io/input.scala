@@ -1,10 +1,10 @@
 package io
 
 import cats.effect.Sync
+import cbindings.portaudio.aliases.PaStream
+import cbindings.portaudio.functions
 import constants.FRAMES_PER_BUFFER
 import fs2.{Chunk, Pull, Stream}
-import portaudio.aliases.PaStream
-import portaudio.functions
 
 import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.UnsignedRichInt

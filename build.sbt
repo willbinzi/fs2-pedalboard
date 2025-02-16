@@ -26,7 +26,7 @@ bindgenBindings := {
   Seq(
     Binding(
         configurator.includes("portaudio") / "portaudio.h",
-        "portaudio"
+        "cbindings.portaudio"
       )
       .withLinkName("portaudio")
   )

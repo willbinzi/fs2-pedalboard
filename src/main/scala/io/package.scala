@@ -2,8 +2,8 @@ package io
 
 import cats.effect.{Resource, Sync}
 import cats.syntax.functor.*
-import portaudio.aliases
-import portaudio.functions
+import cbindings.portaudio.aliases
+import cbindings.portaudio.functions
 
 import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.UnsignedRichInt
