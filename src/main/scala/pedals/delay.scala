@@ -7,31 +7,34 @@ import fs2.{Chunk, Stream}
 import cats.syntax.functor.*
 import cats.syntax.flatMap.*
 import cats.syntax.semigroup.*
+import pubsub.ChunkedChannel.*
 
-def silence[F[_]](timeInSeconds: Float): Stream[F, Chunk[Float]] =
+def silenceChunks[F[_]](timeInSeconds: Float): Stream[F, Chunk[Float]] =
   val delayTimeInChunks = (timeInSeconds * CHUNKS_PER_SECOND).toInt
   val silenceChunkArray = Array.fill(FRAMES_PER_BUFFER)(0f)
   val silenceChunk = Chunk.array(silenceChunkArray)
   Stream.emit(silenceChunk).repeatN(delayTimeInChunks)
 
+def silence[F[_]](timeInSeconds: Float): Stream[F, Float] =
+  silenceChunks(timeInSeconds).unchunks
+
 extension [F[_]](stream: Stream[F, Chunk[Float]])
   def delayed(timeInSeconds: Float): Stream[F, Chunk[Float]] =
-    silence(timeInSeconds) ++ stream
+    silenceChunks(timeInSeconds) ++ stream
 
 def combFilterF[F[_]: Concurrent](
     repeatGain: Float,
     delayTimeInSeconds: Float
 ): F[Pedal[F]] =
-  Channel
-    .unbounded[F, Chunk[Float]]
+  ChunkedChannel
+    .unbounded[F, Float]
     .map(repeatsChannel =>
       stream =>
         (
-          stream.chunks |+|
-            repeatsChannel.stream
-              .map(_ * repeatGain)
-              .delayed(delayTimeInSeconds)
-        ).evalTap(repeatsChannel.send).unchunks
+          stream |+|
+            (silence(delayTimeInSeconds) ++ repeatsChannel.stream
+              .mapChunks(_ * repeatGain))
+        ).through(repeatsChannel.observePublishChunks)
     )
 
 def allPassFilterF[F[_]: Concurrent](
