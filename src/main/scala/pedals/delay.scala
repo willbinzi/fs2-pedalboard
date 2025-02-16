@@ -12,7 +12,7 @@ def silence[F[_]](timeInSeconds: Float): Stream[F, Float] =
   val delayTimeInChunks = (timeInSeconds * CHUNKS_PER_SECOND).toInt
   val silenceChunkArray = Array.fill(FRAMES_PER_BUFFER)(0f)
   val silenceChunk = Chunk.array(silenceChunkArray)
-  Stream.emit(silenceChunk).repeatN(delayTimeInChunks).unchunks
+  Stream.chunk(silenceChunk).repeatN(delayTimeInChunks)
 
 def combFilterF[F[_]: Concurrent](
     repeatGain: Float,
