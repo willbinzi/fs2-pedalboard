@@ -10,11 +10,9 @@ def waveSection(
   val buffer = new Array[Float](FRAMES_PER_BUFFER)
 
   def go(chunkNumber: Long): Pull[Pure, Float, Option[Long]] =
-    for (i <- 0 until FRAMES_PER_BUFFER) do
-      buffer(i) = f((chunkNumber * FRAMES_PER_BUFFER) + i)
+    for (i <- 0 until FRAMES_PER_BUFFER) do buffer(i) = f((chunkNumber * FRAMES_PER_BUFFER) + i)
     Pull.output(Chunk.array(buffer)) >> (
-      if chunkNumber < sectionLengthInChunks then
-        Pull.pure(Some(chunkNumber + 1))
+      if chunkNumber < sectionLengthInChunks then Pull.pure(Some(chunkNumber + 1))
       else Pull.pure(None)
     )
   Pull.loop[Pure, Float, Long](go)(0).stream
