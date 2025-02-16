@@ -1,8 +1,9 @@
 import cats.effect.{IO, ResourceApp, Resource}
+import io.portaudio.PortAudioAudioSuite
 
 object Main extends ResourceApp.Simple:
   def run: Resource[IO, Unit] = for {
-    audioSuite <- io.AudioSuite.default[IO]
+    audioSuite <- PortAudioAudioSuite.resource[IO]
     drive <- pedals.overdrive.blended[IO](0.7, 0.1)
     reverb <- pedals.reverbR[IO](0.7, 0.1)
     _ <-
