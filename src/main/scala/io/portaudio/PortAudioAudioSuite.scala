@@ -11,16 +11,16 @@ import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.UnsignedRichInt
 
 object PortAudioAudioSuite:
-  def apply[F[_]](using F: Sync[F]): Resource[F, AudioSuite[F]] =
+  def resource[F[_]](using F: Sync[F]): Resource[F, AudioSuite[F]] =
     // Note: This is not thread safe!
     // Scala native 0.4 is single threaded so we can re-use the same input and output buffer each time
     // Once this project moves to use multithreading, this will no longer be possible
-    val inputBuffer  = new Array[Float](FRAMES_PER_BUFFER)
+    val inputBuffer = new Array[Float](FRAMES_PER_BUFFER)
     val outputBuffer = new Array[Float](FRAMES_PER_BUFFER)
 
     for {
-      _ <- initPortaudio[F]
-      pStream <- inputOutputStreamPointer[F]
+      _ <- initPortAudio[F]
+      pStream <- defaultPaStream[F]
     } yield new AudioSuite[F]:
       def input: Stream[F, Float] =
         Pull
