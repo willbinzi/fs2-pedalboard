@@ -2,7 +2,7 @@ package io.portaudio
 
 import boxing.toBytePointer
 import cats.effect.{Resource, Sync}
-import cbindings.portaudio.functions.{Pa_ReadStream, Pa_WriteStream}
+import cbindings.portaudio.functions
 import constants.FRAMES_PER_BUFFER
 import fs2.{Chunk, Pull, Pipe, Stream}
 import io.AudioSuite
@@ -22,10 +22,10 @@ object PortAudioAudioSuite:
         val buffer = new Array[Float](FRAMES_PER_BUFFER)
         Pull
           .eval(F.blocking {
-            Pa_ReadStream(
-              pStream,
-              buffer.atUnsafe(0).toBytePointer,
-              FRAMES_PER_BUFFER.toULong
+            functions.Pa_ReadStream(
+              stream = pStream,
+              buffer = buffer.atUnsafe(0).toBytePointer,
+              frames = FRAMES_PER_BUFFER.toULong
             )
             Chunk.ArraySlice(buffer, 0, FRAMES_PER_BUFFER)
           })
@@ -39,10 +39,10 @@ object PortAudioAudioSuite:
         _.chunks.foreach { chunk =>
           F.blocking {
             chunk.copyToArray(buffer, 0)
-            Pa_WriteStream(
-              pStream,
-              buffer.atUnsafe(0).toBytePointer,
-              FRAMES_PER_BUFFER.toULong
+            functions.Pa_WriteStream(
+              stream = pStream,
+              buffer = buffer.atUnsafe(0).toBytePointer,
+              frames = FRAMES_PER_BUFFER.toULong
             )
             ()
           }
