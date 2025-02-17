@@ -2,7 +2,7 @@ package arpeggio.pedals.tremolo.waveforms
 
 import arpeggio.constants.CHUNKS_PER_SECOND
 import arpeggio.pedals.tremolo.waveforms.util.waveSection
-import fs2.{Stream, Pure}
+import fs2.{Pure, Stream}
 
 def squareWave(cycleLengthInSeconds: Float): Stream[Pure, Float] =
   val halfCycleLengthInChunks = (cycleLengthInSeconds * CHUNKS_PER_SECOND).toInt

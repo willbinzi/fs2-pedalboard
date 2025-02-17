@@ -1,6 +1,6 @@
 package arpeggio.pedals
 
-import arpeggio.pedals.tremolo.waveforms.{WaveFormType, getWaveform}
+import arpeggio.pedals.tremolo.waveforms.{getWaveform, WaveFormType}
 
 package object tremolo:
   def apply[F[_]](
