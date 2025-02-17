@@ -1,6 +1,7 @@
-package arpeggio.pedals
+package arpeggio
+package pedals
 
-import arpeggio.pedals.routing.parallel
+import arpeggio.routing.parallel
 import cats.effect.kernel.syntax.resource.effectResourceOps
 import cats.effect.{Concurrent, Resource}
 

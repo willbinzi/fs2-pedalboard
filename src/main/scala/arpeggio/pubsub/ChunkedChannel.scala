@@ -1,4 +1,5 @@
-package arpeggio.pubsub
+package arpeggio
+package pubsub
 
 import cats.effect.Concurrent
 import cats.syntax.functor.toFunctorOps

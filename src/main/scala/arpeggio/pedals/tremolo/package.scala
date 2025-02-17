@@ -1,4 +1,5 @@
-package arpeggio.pedals
+package arpeggio
+package pedals
 
 import arpeggio.pedals.tremolo.waveforms.{getWaveform, WaveFormType}
 

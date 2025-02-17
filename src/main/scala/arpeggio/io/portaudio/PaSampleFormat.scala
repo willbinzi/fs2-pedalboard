@@ -1,4 +1,5 @@
-package arpeggio.io.portaudio
+package arpeggio
+package io.portaudio
 
 import cbindings.portaudio.aliases
 

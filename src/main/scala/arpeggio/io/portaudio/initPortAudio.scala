@@ -1,4 +1,5 @@
-package arpeggio.io.portaudio
+package arpeggio
+package io.portaudio
 
 import cats.effect.{Resource, Sync}
 import cats.syntax.functor.toFunctorOps
