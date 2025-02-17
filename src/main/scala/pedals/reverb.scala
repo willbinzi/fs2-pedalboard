@@ -1,6 +1,6 @@
 package pedals
 
-import cats.effect.kernel.syntax.resource.*
+import cats.effect.kernel.syntax.resource.effectResourceOps
 import cats.effect.{Concurrent, Resource}
 import pedals.routing.parallel
 

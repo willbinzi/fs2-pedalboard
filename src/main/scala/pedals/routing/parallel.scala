@@ -2,13 +2,16 @@ package pedals
 package routing
 
 import cats.data.NonEmptySeq
-import cats.effect.kernel.syntax.resource.*
+import cats.effect.kernel.syntax.resource.effectResourceOps
 import cats.effect.{Concurrent, Resource}
 import cats.syntax.applicative.*
-import cats.syntax.reducible.*
 import cats.syntax.traverse.*
-import fs2.concurrent.Topic
-import fs2.Chunk
+import fs2.Stream
+import pubsub.ChunkedTopic.*
+
+extension [F[_]: Concurrent, A](stream: Stream[F, A])
+  def parZipChunksKeepR(that: Stream[F, A]): Stream[F, A] =
+    stream.chunks.parZipWith(that.chunks)((_, b) => b).unchunks
 
 def parallel[F[_]: Concurrent](
     pedals: Pedal[F]*
@@ -20,15 +23,7 @@ def parallel[F[_]: Concurrent](
       passThrough.pure[Resource[F, *]]
     )(pedals =>
       for {
-        topic <- Topic[F, Chunk[Float]].toResource
-        streams <- pedals.traverse(pedal =>
-          topic.subscribeAwaitUnbounded
-            .map(_.unchunks.through(pedal))
-        )
-      } yield (
-        _.chunks
-          .evalMap(topic.publish1)
-          .parZipWith(streams.reduceMap(_.chunks))((_, b) => b)
-          .unchunks
-      )
+        topic <- ChunkedTopic[F, Float].toResource
+        streams <- pedals.traverse(pedal => topic.subscribeAwaitUnbounded.map(_.through(pedal)))
+      } yield _.through(topic.observePublish).parZipChunksKeepR(streams.reduce)
     )
