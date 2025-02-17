@@ -25,5 +25,5 @@ def parallel[F[_]: Concurrent](
       for {
         topic <- ChunkedTopic[F, Float].toResource
         streams <- pedals.traverse(pedal => topic.subscribeAwaitUnbounded.map(_.through(pedal)))
-      } yield _.through(topic.observePublishChunks).parZipChunksKeepR(streams.reduce)
+      } yield _.through(topic.observePublish).parZipChunksKeepR(streams.reduce)
     )

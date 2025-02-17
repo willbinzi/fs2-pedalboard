@@ -25,7 +25,7 @@ def combFilterF[F[_]: Concurrent](
         (
           stream |+|
             (silence(delayTimeInSeconds) ++ repeatsChannel.stream.map(_ * repeatGain))
-        ).through(repeatsChannel.observePublishChunks)
+        ).through(repeatsChannel.observeSend)
     )
 
 def allPassFilterF[F[_]: Concurrent](
@@ -37,8 +37,8 @@ def allPassFilterF[F[_]: Concurrent](
     inputCopyChannel <- ChunkedChannel.unbounded[F, Float]
   } yield { stream =>
     (
-      stream.through(inputCopyChannel.observePublishChunks).map(_ * -repeatGain) |+|
+      stream.through(inputCopyChannel.observeSend).map(_ * -repeatGain) |+|
         (silence(delayTimeInSeconds) ++ inputCopyChannel.stream) |+|
         (silence(delayTimeInSeconds) ++ outputCopyChannel.stream.map(_ * repeatGain))
-    ).through(outputCopyChannel.observePublishChunks)
+    ).through(outputCopyChannel.observeSend)
   }
