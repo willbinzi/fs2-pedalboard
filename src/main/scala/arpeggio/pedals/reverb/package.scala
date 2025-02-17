@@ -1,7 +1,8 @@
 package arpeggio
-package pedals
+package pedals.reverb
 
 import arpeggio.pedals.delay.{allPassFilterF, combFilterF}
+import arpeggio.pedals.passThrough
 import arpeggio.routing.parallel
 import cats.effect.kernel.syntax.resource.effectResourceOps
 import cats.effect.{Concurrent, Resource}
