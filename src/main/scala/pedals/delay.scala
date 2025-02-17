@@ -24,8 +24,7 @@ def combFilterF[F[_]: Concurrent](
       stream =>
         (
           stream |+|
-            (silence(delayTimeInSeconds) ++ repeatsChannel.stream
-              .mapChunks(_ * repeatGain))
+            (silence(delayTimeInSeconds) ++ repeatsChannel.stream.mapChunks(_ * repeatGain))
         ).through(repeatsChannel.observePublishChunks)
     )
 
