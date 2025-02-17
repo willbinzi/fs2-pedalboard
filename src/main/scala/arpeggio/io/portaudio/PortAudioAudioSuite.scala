@@ -5,7 +5,7 @@ import arpeggio.constants.FRAMES_PER_BUFFER
 import arpeggio.io.AudioSuite
 import cats.effect.{Resource, Sync}
 import cbindings.portaudio.functions
-import fs2.{Chunk, Pull, Pipe, Stream}
+import fs2.{Chunk, Pipe, Pull, Stream}
 
 import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.UnsignedRichInt

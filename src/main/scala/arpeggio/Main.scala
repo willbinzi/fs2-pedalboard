@@ -1,7 +1,7 @@
 package arpeggio
 
 import arpeggio.io.portaudio.PortAudioAudioSuite
-import cats.effect.{IO, ResourceApp, Resource}
+import cats.effect.{IO, Resource, ResourceApp}
 
 object Main extends ResourceApp.Simple:
   def run: Resource[IO, Unit] = for {
