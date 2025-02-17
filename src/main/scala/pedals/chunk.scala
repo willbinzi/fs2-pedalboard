@@ -16,6 +16,3 @@ extension (chunk: Chunk[Float])
   // Pointwise addition of two chunks
   def |+|(other: Chunk[Float]): Chunk[Float] =
     chunk.zipWith(other)(_ + _)
-
-  def *(scalar: Float): Chunk[Float] =
-    chunk.map(_ * scalar)
