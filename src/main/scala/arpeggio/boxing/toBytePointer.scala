@@ -1,4 +1,5 @@
-package arpeggio.boxing
+package arpeggio
+package boxing
 
 import scala.scalanative.runtime.Boxes
 import scala.scalanative.unsafe.Ptr

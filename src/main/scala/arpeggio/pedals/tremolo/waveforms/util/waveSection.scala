@@ -1,4 +1,5 @@
-package arpeggio.pedals.tremolo.waveforms.util
+package arpeggio
+package pedals.tremolo.waveforms.util
 
 import arpeggio.constants.FRAMES_PER_BUFFER
 import fs2.{Chunk, Pull, Pure, Stream}

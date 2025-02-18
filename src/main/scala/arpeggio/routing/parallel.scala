@@ -1,7 +1,8 @@
-package arpeggio.pedals
+package arpeggio
 package routing
 
 import arpeggio.pubsub.ChunkedTopic.*
+import arpeggio.pedals.passThrough
 import cats.data.NonEmptySeq
 import cats.effect.kernel.syntax.resource.effectResourceOps
 import cats.effect.{Concurrent, Resource}

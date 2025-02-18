@@ -1,4 +1,5 @@
-package arpeggio.pedals.tremolo
+package arpeggio
+package pedals.tremolo
 
 import fs2.{Pure, Stream}
 

@@ -1,4 +1,5 @@
-package arpeggio.constants
+package arpeggio
+package constants
 
 val MACBOOK_SPEAKERS: String = "MacBook Pro Speakers"
 val MACBOOK_MIC: String = "MacBook Pro Microphone"

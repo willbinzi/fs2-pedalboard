@@ -1,4 +1,5 @@
-package arpeggio.pedals.tremolo.waveforms
+package arpeggio
+package pedals.tremolo.waveforms
 
 import arpeggio.constants.CHUNKS_PER_SECOND
 import arpeggio.pedals.tremolo.waveforms.util.waveSection

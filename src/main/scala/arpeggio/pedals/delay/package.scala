@@ -1,4 +1,5 @@
-package arpeggio.pedals
+package arpeggio
+package pedals.delay
 
 import arpeggio.constants.{CHUNKS_PER_SECOND, FRAMES_PER_BUFFER}
 import arpeggio.pubsub.ChunkedChannel.*

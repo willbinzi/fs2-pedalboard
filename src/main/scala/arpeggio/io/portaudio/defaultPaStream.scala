@@ -1,6 +1,6 @@
-package arpeggio.io.portaudio
+package arpeggio
+package io.portaudio
 
-import arpeggio.constants
 import cats.effect.Resource
 import cats.effect.Sync
 import cats.syntax.functor.*

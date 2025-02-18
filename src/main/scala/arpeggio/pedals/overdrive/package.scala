@@ -1,7 +1,7 @@
-package arpeggio.pedals
-package overdrive
+package arpeggio
+package pedals.overdrive
 
-import arpeggio.pedals.routing.parallel
+import arpeggio.routing.parallel
 import cats.effect.kernel.Resource
 import cats.effect.Concurrent
 

@@ -1,4 +1,5 @@
-package arpeggio.io.portaudio
+package arpeggio
+package io.portaudio
 
 import arpeggio.boxing.toBytePointer
 import arpeggio.constants.FRAMES_PER_BUFFER

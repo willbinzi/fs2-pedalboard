@@ -7,7 +7,7 @@ object Main extends ResourceApp.Simple:
   def run: Resource[IO, Unit] = for {
     audioSuite <- PortAudioAudioSuite.resource[IO]
     drive <- pedals.overdrive.blended[IO](0.7, 0.1)
-    reverb <- pedals.reverbR[IO](0.7, 0.1)
+    reverb <- pedals.reverb.reverbR[IO](0.7, 0.1)
     _ <-
       audioSuite.input
         .through(drive)

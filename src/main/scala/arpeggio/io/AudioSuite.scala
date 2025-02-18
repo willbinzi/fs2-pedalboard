@@ -1,4 +1,5 @@
-package arpeggio.io
+package arpeggio
+package io
 
 import fs2.{Pipe, Stream}
 
