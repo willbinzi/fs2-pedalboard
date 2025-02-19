@@ -1,19 +1,16 @@
 package arpeggio
 
 import arpeggio.io.portaudio.PortAudioAudioSuite
-import cats.effect.{IO, Resource, ResourceApp}
+import cats.effect.{IO, IOApp}
 
-object Main extends ResourceApp.Simple:
-  def run: Resource[IO, Unit] = for {
-    audioSuite <- PortAudioAudioSuite.resource[IO]
-    drive <- pedals.overdrive.blended[IO](0.7, 0.1)
-    reverb <- pedals.reverb.reverbR[IO](0.7, 0.1)
-    _ <-
+object Main extends IOApp.Simple:
+  def run: IO[Unit] = PortAudioAudioSuite
+    .resource[IO]
+    .use(audioSuite =>
       audioSuite.input
-        .through(drive)
-        .through(reverb)
+        .through(pedals.overdrive.blended(0.7, 0.1))
+        .through(pedals.reverb.reverb(0.7, 0.1))
         .through(audioSuite.output)
         .compile
         .drain
-        .toResource
-  } yield ()
+    )
