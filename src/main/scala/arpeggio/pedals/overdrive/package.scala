@@ -2,7 +2,6 @@ package arpeggio
 package pedals.overdrive
 
 import arpeggio.routing.parallel
-import cats.effect.kernel.Resource
 import cats.effect.Concurrent
 
 def asymmetricClipping[F[_]](threshold: Float): Pedal[F] =
@@ -14,7 +13,7 @@ def symmetricClipping[F[_]](threshold: Float): Pedal[F] =
 def blended[F[_]: Concurrent](
     blend: Float,
     threshold: Float
-): Resource[F, Pedal[F]] =
+): Pedal[F] =
   parallel(
     _.map(_ * (1 - blend)),
     symmetricClipping(threshold) andThen (_.map(_ * blend))
