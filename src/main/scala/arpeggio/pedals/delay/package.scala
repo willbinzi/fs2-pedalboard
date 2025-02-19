@@ -5,8 +5,6 @@ import arpeggio.constants.{CHUNKS_PER_SECOND, FRAMES_PER_BUFFER}
 import arpeggio.pubsub.ChunkedChannel.*
 import cats.effect.Concurrent
 import fs2.{Chunk, Stream}
-import cats.syntax.functor.*
-import cats.syntax.flatMap.*
 import cats.syntax.semigroup.*
 
 def silence[F[_]](timeInSeconds: Float): Stream[F, Float] =
@@ -15,31 +13,32 @@ def silence[F[_]](timeInSeconds: Float): Stream[F, Float] =
   val silenceChunk = Chunk.array(silenceChunkArray)
   Stream.chunk(silenceChunk).repeatN(delayTimeInChunks)
 
-def combFilterF[F[_]: Concurrent](
+def combFilter[F[_]: Concurrent](
     repeatGain: Float,
     delayTimeInSeconds: Float
-): F[Pedal[F]] =
-  ChunkedChannel
-    .unbounded[F, Float]
-    .map(repeatsChannel =>
-      stream =>
-        (
-          stream |+|
-            (silence(delayTimeInSeconds) ++ repeatsChannel.stream.map(_ * repeatGain))
-        ).through(repeatsChannel.observeSend)
+): Pedal[F] = stream =>
+  Stream
+    .eval(
+      ChunkedChannel
+        .unbounded[F, Float]
+    )
+    .flatMap(repeatsChannel =>
+      (
+        stream |+|
+          (silence(delayTimeInSeconds) ++ repeatsChannel.stream.map(_ * repeatGain))
+      ).through(repeatsChannel.observeSend)
     )
 
-def allPassFilterF[F[_]: Concurrent](
+def allPassFilter[F[_]: Concurrent](
     repeatGain: Float,
     delayTimeInSeconds: Float
-): F[Pedal[F]] =
+): Pedal[F] = stream =>
   for {
-    outputCopyChannel <- ChunkedChannel.unbounded[F, Float]
-    inputCopyChannel <- ChunkedChannel.unbounded[F, Float]
-  } yield { stream =>
-    (
+    outputCopyChannel <- Stream.eval(ChunkedChannel.unbounded[F, Float])
+    inputCopyChannel <- Stream.eval(ChunkedChannel.unbounded[F, Float])
+    result <- (
       stream.through(inputCopyChannel.observeSend).map(_ * -repeatGain) |+|
         (silence(delayTimeInSeconds) ++ inputCopyChannel.stream) |+|
         (silence(delayTimeInSeconds) ++ outputCopyChannel.stream.map(_ * repeatGain))
     ).through(outputCopyChannel.observeSend)
-  }
+  } yield result
