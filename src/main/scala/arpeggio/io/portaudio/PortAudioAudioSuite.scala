@@ -33,7 +33,7 @@ object PortAudioAudioSuite:
           .repeat
 
       def output: Pipe[F, Float, Nothing] =
-        _.chunks.foreach { chunk =>
+        _.chunkN(FRAMES_PER_BUFFER, allowFewer = false).foreach { chunk =>
           F.blocking {
             val outputBuffer = new Array[Float](FRAMES_PER_BUFFER)
             chunk.copyToArray(outputBuffer, 0)

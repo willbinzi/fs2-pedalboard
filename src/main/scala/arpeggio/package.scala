@@ -12,7 +12,9 @@ given streamPointwiseAddChunks[F[_]: Concurrent]: Semigroup[Stream[F, Float]] =
         x: Stream[F, Float],
         y: Stream[F, Float]
     ): Stream[F, Float] =
-      x.chunks.parZipWith(y.chunks)(_ |+| _).unchunks
+      x.chunkN(constants.FRAMES_PER_BUFFER)
+        .parZipWith(y.chunkN(constants.FRAMES_PER_BUFFER))(_ |+| _)
+        .unchunks
 
 extension (chunk: Chunk[Float])
   // Pointwise addition of two chunks
