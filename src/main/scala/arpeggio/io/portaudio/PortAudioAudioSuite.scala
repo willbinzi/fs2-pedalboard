@@ -13,12 +13,6 @@ import scala.scalanative.unsigned.UnsignedRichInt
 
 object PortAudioAudioSuite:
   def resource[F[_]](using F: Sync[F]): Resource[F, AudioSuite[F]] =
-    // Note: This is not thread safe!
-    // Scala native 0.4 is single threaded so we can re-use the same input and output buffer each time
-    // Once this project moves to use multithreading, this will no longer be possible
-    val inputBuffer = new Array[Float](FRAMES_PER_BUFFER)
-    val outputBuffer = new Array[Float](FRAMES_PER_BUFFER)
-
     for {
       _ <- initPortAudio[F]
       pStream <- defaultPaStream[F]
@@ -26,6 +20,7 @@ object PortAudioAudioSuite:
       def input: Stream[F, Float] =
         Pull
           .eval(F.blocking {
+            val inputBuffer = new Array[Float](FRAMES_PER_BUFFER)
             functions.Pa_ReadStream(
               stream = pStream,
               buffer = inputBuffer.atUnsafe(0).toBytePointer,
@@ -40,6 +35,7 @@ object PortAudioAudioSuite:
       def output: Pipe[F, Float, Nothing] =
         _.chunks.foreach { chunk =>
           F.blocking {
+            val outputBuffer = new Array[Float](FRAMES_PER_BUFFER)
             chunk.copyToArray(outputBuffer, 0)
             functions.Pa_WriteStream(
               stream = pStream,
