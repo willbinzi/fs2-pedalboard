@@ -3,6 +3,7 @@ package pedals.delay
 
 import arpeggio.constants.{CHUNKS_PER_SECOND, FRAMES_PER_BUFFER}
 import arpeggio.pubsub.ChunkedChannel.*
+import arpeggio.routing.Fork
 import cats.effect.Concurrent
 import fs2.{Chunk, Stream}
 import cats.syntax.semigroup.*
@@ -13,20 +14,23 @@ def silence[F[_]](timeInSeconds: Float): Stream[F, Float] =
   val silenceChunk = Chunk.array(silenceChunkArray)
   Stream.chunk(silenceChunk).repeatN(delayTimeInChunks)
 
+def delayLine[F[_]](timeInSeconds: Float): Pedal[F] =
+  silence(timeInSeconds) ++ _
+
 def combFilter[F[_]: Concurrent](
     repeatGain: Float,
     delayTimeInSeconds: Float
 ): Pedal[F] = stream =>
   Stream
-    .eval(
-      ChunkedChannel
-        .unbounded[F, Float]
-    )
-    .flatMap(repeatsChannel =>
-      (
-        stream |+|
-          (silence(delayTimeInSeconds) ++ repeatsChannel.stream.map(_ * repeatGain))
-      ).through(repeatsChannel.observeSend)
+    .resource(Fork.throttled[F].both(Fork[F]))
+    .flatMap((fork1, fork2) =>
+      (fork1.lOut |+| fork2.lOut)
+        .concurrently(fork1.in(stream))
+        .concurrently(
+          fork2.in(
+            (fork1.rOut |+| fork2.rOut).through(delayLine(delayTimeInSeconds)).map(_ * repeatGain)
+          )
+        )
     )
 
 def allPassFilter[F[_]: Concurrent](
