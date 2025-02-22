@@ -1,7 +1,7 @@
 package arpeggio
 package pedals.reverb
 
-import arpeggio.pedals.delay.{allPassFilter, combFilter}
+import arpeggio.pedals.delay.{allPassFilter, echoRepeats}
 import arpeggio.pedals.passThrough
 import arpeggio.routing.parallel
 import cats.effect.Concurrent
@@ -17,10 +17,10 @@ def reverb[F[_]: Concurrent](
       .through(allPassFilter(0.7, 0.113))
       .through(
         parallel(
-          combFilter(decay + 0.009f, 4.799),
-          combFilter(decay, 4.999),
-          combFilter(decay - 0.018f, 5.399),
-          combFilter(decay - 0.036f, 5.801)
+          echoRepeats(decay + 0.009f, 4.799),
+          echoRepeats(decay, 4.999),
+          echoRepeats(decay - 0.018f, 5.399),
+          echoRepeats(decay - 0.036f, 5.801)
         )
       )
       .map(

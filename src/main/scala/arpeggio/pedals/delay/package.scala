@@ -7,6 +7,8 @@ import arpeggio.routing.Fork
 import cats.effect.Concurrent
 import fs2.{Chunk, Stream}
 import cats.syntax.semigroup.*
+import arpeggio.routing.parallel
+import arpeggio.pedals.passThrough
 
 def silence[F[_]](timeInSeconds: Float): Stream[F, Float] =
   val delayTimeInChunks = (timeInSeconds * CHUNKS_PER_SECOND).toInt
@@ -17,19 +19,26 @@ def silence[F[_]](timeInSeconds: Float): Stream[F, Float] =
 def delayLine[F[_]](timeInSeconds: Float): Pedal[F] =
   silence(timeInSeconds) ++ _
 
-def combFilter[F[_]: Concurrent](
+def echo[F[_]: Concurrent](
+    repeatGain: Float,
+    delayTimeInSeconds: Float
+): Pedal[F] =
+  parallel(
+    passThrough,
+    echoRepeats(repeatGain, delayTimeInSeconds).andThen(_.map(_ * repeatGain))
+  )
+
+def echoRepeats[F[_]: Concurrent](
     repeatGain: Float,
     delayTimeInSeconds: Float
 ): Pedal[F] = stream =>
   Stream
-    .resource(Fork.throttled[F].both(Fork[F]))
-    .flatMap((fork1, fork2) =>
-      (fork1.lOut |+| fork2.lOut)
-        .concurrently(fork1.in(stream))
+    .resource(Fork.throttled[F])
+    .flatMap(fork =>
+      fork.lOut
+        .through(delayLine(delayTimeInSeconds))
         .concurrently(
-          fork2.in(
-            (fork1.rOut |+| fork2.rOut).through(delayLine(delayTimeInSeconds)).map(_ * repeatGain)
-          )
+          fork.in(stream |+| fork.rOut.through(delayLine(delayTimeInSeconds)).map(_ * repeatGain))
         )
     )
 
