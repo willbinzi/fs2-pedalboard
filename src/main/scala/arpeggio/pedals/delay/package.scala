@@ -7,7 +7,6 @@ import cats.effect.Concurrent
 import fs2.{Chunk, Stream}
 import cats.syntax.semigroup.*
 import arpeggio.routing.parallel
-import arpeggio.pedals.passThrough
 import arpeggio.pubsub.ChunkedChannel.*
 
 def silence[F[_]](timeInMs: Float): Stream[F, Float] =
@@ -31,7 +30,7 @@ def echo[F[_]: Concurrent](
     delayTimeInSeconds: Float
 ): Pedal[F] =
   parallel(
-    passThrough,
+    identity,
     echoRepeats(repeatGain, delayTimeInSeconds).andThen(_.map(_ * repeatGain))
   )
 
