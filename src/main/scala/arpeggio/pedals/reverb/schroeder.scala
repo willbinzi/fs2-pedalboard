@@ -1,7 +1,7 @@
 package arpeggio
 package pedals.reverb
 
-import arpeggio.pedals.delay.{allPassStage, echoRepeats}
+import arpeggio.pedals.delay.echoRepeats
 import arpeggio.pedals.passThrough
 import arpeggio.routing.parallel
 import cats.effect.Concurrent
@@ -29,3 +29,11 @@ def schroeder[F[_]: Concurrent](
 
 def gain(reverbTimeInMs: Float, predelayTimeInMs: Float): Float =
   scala.math.pow(2, (-3f * predelayTimeInMs) / reverbTimeInMs).toFloat
+
+def allPassStage[F[_]: Concurrent](
+    repeatGain: Float,
+    delayTimeInSeconds: Float
+): Pedal[F] = parallel(
+  _.map(_ * -repeatGain),
+  echoRepeats(repeatGain, delayTimeInSeconds).andThen(_.map(_ * (1 - repeatGain * repeatGain)))
+)

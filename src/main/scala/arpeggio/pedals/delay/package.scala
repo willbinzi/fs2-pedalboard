@@ -48,11 +48,3 @@ def echoRepeats[F[_]: Concurrent](
         )
         .through(delayLine(delayTimeInSeconds))
     )
-
-def allPassStage[F[_]: Concurrent](
-    repeatGain: Float,
-    delayTimeInSeconds: Float
-): Pedal[F] = parallel(
-  _.map(_ * -repeatGain),
-  echoRepeats(repeatGain, delayTimeInSeconds).andThen(_.map(_ * (1 - repeatGain * repeatGain)))
-)
