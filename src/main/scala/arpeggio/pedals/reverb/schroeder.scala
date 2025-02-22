@@ -2,7 +2,6 @@ package arpeggio
 package pedals.reverb
 
 import arpeggio.pedals.delay.echoRepeats
-import arpeggio.pedals.passThrough
 import arpeggio.routing.parallel
 import cats.effect.Concurrent
 
@@ -15,7 +14,7 @@ def schroeder[F[_]: Concurrent](
   val t3 = predelayTimeInMs * 1.34f
   val t4 = predelayTimeInMs * 1.5f
   parallel(
-    passThrough,
+    identity,
     parallel(
       echoRepeats(gain(reverbTimeInMs, t1), t1),
       echoRepeats(gain(reverbTimeInMs, t2), t2),
