@@ -6,24 +6,26 @@ import arpeggio.pedals.passThrough
 import arpeggio.routing.parallel
 import cats.effect.Concurrent
 
-def reverb[F[_]: Concurrent](
-    decay: Float,
-    mix: Float
+def schroeder[F[_]: Concurrent](
+    predelayTimeInMs: Float, // = 30
+    reverbTimeInMs: Float
 ): Pedal[F] =
+  val t1 = predelayTimeInMs
+  val t2 = predelayTimeInMs * 1.17f
+  val t3 = predelayTimeInMs * 1.34f
+  val t4 = predelayTimeInMs * 1.5f
   parallel(
     passThrough,
-    _.through(allPassStage(0.7, 1.051))
-      .through(allPassStage(0.7, 0.337))
-      .through(allPassStage(0.7, 0.113))
-      .through(
-        parallel(
-          echoRepeats(decay + 0.009f, 4.799),
-          echoRepeats(decay, 4.999),
-          echoRepeats(decay - 0.018f, 5.399),
-          echoRepeats(decay - 0.036f, 5.801)
-        )
-      )
-      .map(
-        _ * (mix * 0.25f)
-      ) // Divide by 4 to compensate for the 4 parallel comb filters
+    parallel(
+      echoRepeats(gain(reverbTimeInMs, t1), t1),
+      echoRepeats(gain(reverbTimeInMs, t2), t2),
+      echoRepeats(gain(reverbTimeInMs, t3), t3),
+      echoRepeats(gain(reverbTimeInMs, t4), t4)
+    ).andThen(
+      allPassStage(0.7, 5)
+        .andThen(allPassStage(0.7, 1.7))
+    )
   )
+
+def gain(reverbTimeInMs: Float, predelayTimeInMs: Float): Float =
+  scala.math.pow(2, (-3f * predelayTimeInMs) / reverbTimeInMs).toFloat
