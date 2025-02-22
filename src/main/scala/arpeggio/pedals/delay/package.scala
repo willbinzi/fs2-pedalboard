@@ -2,7 +2,6 @@ package arpeggio
 package pedals.delay
 
 import arpeggio.constants.{CHUNKS_PER_SECOND, FRAMES_PER_BUFFER}
-import arpeggio.pubsub.ChunkedChannel.*
 import arpeggio.routing.Fork
 import cats.effect.Concurrent
 import fs2.{Chunk, Stream}
@@ -33,25 +32,19 @@ def echoRepeats[F[_]: Concurrent](
     delayTimeInSeconds: Float
 ): Pedal[F] = stream =>
   Stream
-    .resource(Fork.throttled[F])
+    .resource(Fork[F])
     .flatMap(fork =>
       fork.lOut
-        .through(delayLine(delayTimeInSeconds))
         .concurrently(
           fork.in(stream |+| fork.rOut.through(delayLine(delayTimeInSeconds)).map(_ * repeatGain))
         )
+        .through(delayLine(delayTimeInSeconds))
     )
 
-def allPassFilter[F[_]: Concurrent](
+def allPassStage[F[_]: Concurrent](
     repeatGain: Float,
     delayTimeInSeconds: Float
-): Pedal[F] = stream =>
-  for {
-    outputCopyChannel <- Stream.eval(ChunkedChannel.unbounded[F, Float])
-    inputCopyChannel <- Stream.eval(ChunkedChannel.unbounded[F, Float])
-    result <- (
-      stream.through(inputCopyChannel.observeSend).map(_ * -repeatGain) |+|
-        (silence(delayTimeInSeconds) ++ inputCopyChannel.stream) |+|
-        (silence(delayTimeInSeconds) ++ outputCopyChannel.stream.map(_ * repeatGain))
-    ).through(outputCopyChannel.observeSend)
-  } yield result
+): Pedal[F] = parallel(
+  _.map(_ * -repeatGain),
+  echoRepeats(repeatGain, delayTimeInSeconds).andThen(_.map(_ * (1 - repeatGain * repeatGain)))
+)

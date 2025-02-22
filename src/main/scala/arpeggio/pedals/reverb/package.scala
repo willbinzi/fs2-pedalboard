@@ -1,7 +1,7 @@
 package arpeggio
 package pedals.reverb
 
-import arpeggio.pedals.delay.{allPassFilter, echoRepeats}
+import arpeggio.pedals.delay.{allPassStage, echoRepeats}
 import arpeggio.pedals.passThrough
 import arpeggio.routing.parallel
 import cats.effect.Concurrent
@@ -12,9 +12,9 @@ def reverb[F[_]: Concurrent](
 ): Pedal[F] =
   parallel(
     passThrough,
-    _.through(allPassFilter(0.7, 1.051))
-      .through(allPassFilter(0.7, 0.337))
-      .through(allPassFilter(0.7, 0.113))
+    _.through(allPassStage(0.7, 1.051))
+      .through(allPassStage(0.7, 0.337))
+      .through(allPassStage(0.7, 0.113))
       .through(
         parallel(
           echoRepeats(decay + 0.009f, 4.799),
