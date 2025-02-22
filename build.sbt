@@ -11,7 +11,7 @@ import scala.scalanative.build._
 
 nativeConfig ~= {
   _.withLTO(LTO.full)
-  .withMode(Mode.releaseFull)
+  .withMode(Mode.release)
   .withGC(GC.commix)
 }
 
