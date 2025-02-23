@@ -7,7 +7,8 @@ import cats.effect.Concurrent
 
 def schroeder[F[_]: Concurrent](
     predelayMillis: Float,
-    decayMillis: Float
+    decayMillis: Float,
+    mix: Float
 ): Pedal[F] =
   parallel(
     identity,
@@ -16,10 +17,10 @@ def schroeder[F[_]: Concurrent](
       Seq(1f, 1.17f, 1.34f, 1.5f)
         .map(predelayMillis * _)
         .map(t => echoRepeats(gain(decayMillis, t), t)): _*
-    ).andThen(
-      allPassStage(0.7, 5)
-        .andThen(allPassStage(0.7, 1.7))
     )
+      .andThen(allPassStage(0.7, 5))
+      .andThen(allPassStage(0.7, 1.7))
+      .andThen(_.map(_ * mix))
   )
 
 def gain(decayMillis: Float, predelayMillis: Float): Float =
