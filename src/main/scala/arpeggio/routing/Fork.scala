@@ -12,15 +12,6 @@ trait Fork[F[_]] {
 }
 
 object Fork:
-  def throttled[F[_]: Concurrent]: Resource[F, Fork[F]] = for {
-    topic <- Resource.eval(ChunkedTopic[F, Float])
-    left <- topic.subscribeAwait(1)
-    right <- topic.subscribeAwait(1)
-  } yield new:
-    def in: Pipe[F, Float, Nothing] = topic.publish
-    def lOut: Stream[F, Float] = left
-    def rOut: Stream[F, Float] = right
-
   def apply[F[_]: Concurrent]: Resource[F, Fork[F]] = for {
     topic <- Resource.eval(ChunkedTopic[F, Float])
     left <- topic.subscribeAwait(Int.MaxValue)

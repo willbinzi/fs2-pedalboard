@@ -9,17 +9,13 @@ def schroeder[F[_]: Concurrent](
     predelayMillis: Float,
     decayMillis: Float
 ): Pedal[F] =
-  val t1 = predelayMillis
-  val t2 = predelayMillis * 1.17f
-  val t3 = predelayMillis * 1.34f
-  val t4 = predelayMillis * 1.5f
   parallel(
     identity,
     parallel(
-      echoRepeats(gain(decayMillis, t1), t1),
-      echoRepeats(gain(decayMillis, t2), t2),
-      echoRepeats(gain(decayMillis, t3), t3),
-      echoRepeats(gain(decayMillis, t4), t4)
+      // Create 4 echo stages with slightly differing delays and gain factors
+      Seq(1f, 1.17f, 1.34f, 1.5f)
+        .map(predelayMillis * _)
+        .map(t => echoRepeats(gain(decayMillis, t), t)): _*
     ).andThen(
       allPassStage(0.7, 5)
         .andThen(allPassStage(0.7, 1.7))
@@ -31,8 +27,9 @@ def gain(decayMillis: Float, predelayMillis: Float): Float =
 
 def allPassStage[F[_]: Concurrent](
     repeatGain: Float,
-    delayTimeInSeconds: Float
+    delayTimeMillis: Float
 ): Pedal[F] = parallel(
   _.map(_ * -repeatGain),
-  echoRepeats(repeatGain, delayTimeInSeconds).andThen(_.map(_ * (1 - repeatGain * repeatGain)))
+  echoRepeats(repeatGain, delayTimeMillis)
+    .andThen(_.map(_ * (1 - repeatGain * repeatGain)))
 )
