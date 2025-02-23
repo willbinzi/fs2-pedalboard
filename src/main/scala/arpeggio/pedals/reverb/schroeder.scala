@@ -31,8 +31,9 @@ def gain(decayMillis: Float, predelayMillis: Float): Float =
 
 def allPassStage[F[_]: Concurrent](
     repeatGain: Float,
-    delayTimeInSeconds: Float
+    delayTimeMillis: Float
 ): Pedal[F] = parallel(
   _.map(_ * -repeatGain),
-  echoRepeats(repeatGain, delayTimeInSeconds).andThen(_.map(_ * (1 - repeatGain * repeatGain)))
+  echoRepeats(repeatGain, delayTimeMillis)
+    .andThen(_.map(_ * (1 - repeatGain * repeatGain)))
 )
