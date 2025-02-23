@@ -2,12 +2,12 @@ package arpeggio
 package pedals.delay
 
 import arpeggio.constants.SAMPLE_RATE
-import arpeggio.routing.Fork
 import cats.effect.Concurrent
 import fs2.{Chunk, Stream}
 import cats.syntax.semigroup.*
-import arpeggio.routing.parallel
 import arpeggio.pubsub.ChunkedChannel.*
+import arpeggio.pubsub.ChunkedTopic.*
+import arpeggio.routing.parallel
 
 def silence[F[_]](timeInMillis: Float): Stream[F, Float] =
   val timeInFrames = (timeInMillis * SAMPLE_RATE / 1000).toInt
@@ -38,12 +38,17 @@ def echoRepeats[F[_]: Concurrent](
     repeatGain: Float,
     delayTimeMillis: Float
 ): Pedal[F] = stream =>
-  Stream
-    .resource(Fork[F])
-    .flatMap(fork =>
-      fork.lOut
-        .concurrently(
-          fork.in(stream |+| fork.rOut.through(delayLine(delayTimeMillis)).map(_ * repeatGain))
-        )
-        .through(delayLine(delayTimeMillis))
+  for {
+    topic <- Stream.eval(ChunkedTopic[F, Float])
+    outStream <- Stream.resource(topic.subscribeAwait(1))
+    feedbackStream <- Stream.resource(
+      topic
+        .subscribeAwait(1)
+        .map(delayLine(delayTimeMillis).andThen(_.map(_ * repeatGain)))
     )
+    out <- outStream
+      .through(delayLine(delayTimeMillis))
+      .concurrently(
+        (stream |+| feedbackStream).through(topic.publish)
+      )
+  } yield out
