@@ -8,7 +8,7 @@ object Main extends IOApp.Simple:
     .resource[IO]
     .use(audioSuite =>
       audioSuite.input
-        .through(pedals.reverb.schroeder(predelayMillis = 30, decayMillis = 100))
+        .through(pedals.reverb.schroeder(predelayMillis = 30, decayMillis = 100, mix = 1))
         .through(audioSuite.output)
         .compile
         .drain
