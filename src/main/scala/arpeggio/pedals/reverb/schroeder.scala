@@ -5,6 +5,8 @@ import arpeggio.pedals.delay.echoRepeats
 import arpeggio.routing.parallel
 import cats.effect.Concurrent
 
+import java.lang.Math
+
 def schroeder[F[_]: Concurrent](
     predelayMillis: Float,
     decayMillis: Float,
@@ -24,7 +26,7 @@ def schroeder[F[_]: Concurrent](
   )
 
 def gain(decayMillis: Float, predelayMillis: Float): Float =
-  scala.math.pow(2, (-3f * predelayMillis) / decayMillis).toFloat
+  Math.pow(2, (-3 * predelayMillis) / decayMillis).toFloat
 
 def allPassStage[F[_]: Concurrent](
     repeatGain: Float,
