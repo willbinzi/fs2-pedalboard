@@ -18,7 +18,8 @@ private def inputStreamParams(using Zone): Ptr[PaStreamParameters] =
     device = inputDevice,
     channelCount = 1,
     sampleFormat = PaSampleFormat.paFloat32,
-    suggestedLatency = (!functions.Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency,
+    suggestedLatency =
+      (!functions.Pa_GetDeviceInfo(inputDevice)).defaultLowInputLatency,
     hostApiSpecificStreamInfo = null
   )
 
@@ -28,7 +29,8 @@ private def outputStreamParams(using Zone): Ptr[PaStreamParameters] =
     device = functions.Pa_GetDefaultOutputDevice(),
     channelCount = 1,
     sampleFormat = PaSampleFormat.paFloat32,
-    suggestedLatency = (!functions.Pa_GetDeviceInfo(outputDevice)).defaultLowOutputLatency,
+    suggestedLatency =
+      (!functions.Pa_GetDeviceInfo(outputDevice)).defaultLowOutputLatency,
     hostApiSpecificStreamInfo = null
   )
 

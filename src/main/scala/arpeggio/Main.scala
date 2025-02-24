@@ -1,6 +1,7 @@
 package arpeggio
 
 import arpeggio.io.portaudio.PortAudioAudioSuite
+import arpeggio.pedals.reverb
 import cats.effect.{IO, IOApp}
 
 object Main extends IOApp.Simple:
@@ -8,7 +9,9 @@ object Main extends IOApp.Simple:
     .resource[IO]
     .use(audioSuite =>
       audioSuite.input
-        .through(pedals.reverb.schroeder(predelayMillis = 30, decayMillis = 100, mix = 1))
+        .through(
+          reverb.schroeder(predelayMillis = 30, decayMillis = 100, mix = 1)
+        )
         .through(audioSuite.output)
         .compile
         .drain
