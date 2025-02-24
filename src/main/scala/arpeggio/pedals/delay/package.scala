@@ -42,13 +42,12 @@ def echoRepeats[F[_]: Concurrent](
     topic <- Stream.eval(ChunkedTopic[F, Float])
     outStream <- Stream.resource(topic.subscribeAwait(1))
     feedbackStream <- Stream.resource(
-      topic
-        .subscribeAwait(1)
-        .map(delayLine(delayTimeMillis).andThen(_.map(_ * repeatGain)))
+      topic.subscribeAwait(1).map(_.map(_ * repeatGain))
     )
     out <- outStream
-      .through(delayLine(delayTimeMillis))
       .concurrently(
-        (stream |+| feedbackStream).through(topic.publish)
+        (stream |+| feedbackStream)
+          .through(delayLine(delayTimeMillis))
+          .through(topic.publish)
       )
   } yield out
