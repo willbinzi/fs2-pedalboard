@@ -3,15 +3,15 @@ package pedals.delay
 
 import arpeggio.constants.SAMPLE_RATE
 import cats.effect.Concurrent
-import fs2.{Chunk, Stream}
+import fs2.{Pure, Stream}
 import cats.syntax.semigroup.*
 import arpeggio.pubsub.ChunkedChannel.*
 import arpeggio.pubsub.ChunkedTopic.*
 import arpeggio.routing.parallel
 
-def silence[F[_]](timeInMillis: Float): Stream[F, Float] =
+def silence(timeInMillis: Float): Stream[Pure, Float] =
   val timeInFrames = (timeInMillis * SAMPLE_RATE / 1000).toInt
-  Stream.chunk(Chunk.constant(0, timeInFrames))
+  Stream.constant(0f).take(timeInFrames)
 
 def buffered[F[_]: Concurrent](pedal: Pedal[F]): Pedal[F] = stream =>
   Stream
