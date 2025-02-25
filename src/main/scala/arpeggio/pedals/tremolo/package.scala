@@ -1,11 +1,16 @@
 package arpeggio
-package pedals
+package pedals.tremolo
 
-import arpeggio.pedals.tremolo.waveforms.{getWaveform, WaveFormType}
+import arpeggio.constants.SAMPLE_RATE
+import arpeggio.pedals.volume
+import cats.effect.Concurrent
+import fs2.Stream
 
-package object tremolo:
-  def apply[F[_]](
-      waveformType: WaveFormType,
-      cycleLengthInSeconds: Float
-  ): Pedal[F] =
-    _.zipWith(getWaveform(waveformType, cycleLengthInSeconds))(_ * _)
+def squareWave[F[_]: Concurrent](
+    cycleLengthMillis: Float
+): Pedal[F] =
+  val halfCycleLengthInFrames = (cycleLengthMillis * SAMPLE_RATE / 2000).toInt
+  volume(
+    (Stream.constant(1f).take(halfCycleLengthInFrames) ++
+      Stream.constant(0f).take(halfCycleLengthInFrames)).repeat
+  )
