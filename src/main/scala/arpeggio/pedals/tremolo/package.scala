@@ -6,10 +6,13 @@ import arpeggio.pedals.volume
 import cats.effect.Concurrent
 import fs2.Stream
 
+import scala.concurrent.duration.Duration
+
 def squareWave[F[_]: Concurrent](
-    cycleLengthMillis: Float
+    cycleLength: Duration
 ): Pedal[F] =
-  val halfCycleLengthInFrames = (cycleLengthMillis * SAMPLE_RATE / 2000).toInt
+  val halfCycleLengthInFrames =
+    (cycleLength.toMicros * SAMPLE_RATE / 2000000).toInt
   volume(
     (Stream.constant(1f).take(halfCycleLengthInFrames) ++
       Stream.constant(0f).take(halfCycleLengthInFrames)).repeat

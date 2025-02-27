@@ -2,16 +2,18 @@ package arpeggio
 package pedals.delay
 
 import arpeggio.constants.SAMPLE_RATE
-import cats.effect.Concurrent
-import fs2.{Pure, Stream}
-import cats.syntax.semigroup.*
 import arpeggio.pubsub.ChunkedChannel.*
 import arpeggio.pubsub.ChunkedTopic.*
 import arpeggio.routing.parallel
+import cats.effect.Concurrent
+import fs2.{Pure, Stream}
+import cats.syntax.semigroup.*
 
-def silence(timeInMillis: Float): Stream[Pure, Float] =
-  val timeInFrames = (timeInMillis * SAMPLE_RATE / 1000).toInt
-  Stream.constant(0f).take(timeInFrames)
+import scala.concurrent.duration.Duration
+
+def silence(time: Duration): Stream[Pure, Float] =
+  val timeInFrames = time.toMicros * SAMPLE_RATE / 1000000
+  Stream.constant(0f).take(timeInFrames.toLong)
 
 def buffered[F[_]: Concurrent](pedal: Pedal[F]): Pedal[F] = stream =>
   Stream
@@ -22,21 +24,21 @@ def buffered[F[_]: Concurrent](pedal: Pedal[F]): Pedal[F] = stream =>
         .concurrently(stream.through(channel.sendAll))
     )
 
-def delayLine[F[_]: Concurrent](timeInMillis: Float): Pedal[F] =
-  buffered(silence(timeInMillis) ++ _)
+def delayLine[F[_]: Concurrent](time: Duration): Pedal[F] =
+  buffered(silence(time) ++ _)
 
 def echo[F[_]: Concurrent](
     repeatGain: Float,
-    delayTimeMillis: Float
+    delayTime: Duration
 ): Pedal[F] =
   parallel(
     identity,
-    echoRepeats(repeatGain, delayTimeMillis).andThen(_.map(_ * repeatGain))
+    echoRepeats(repeatGain, delayTime).andThen(_.map(_ * repeatGain))
   )
 
 def echoRepeats[F[_]: Concurrent](
     repeatGain: Float,
-    delayTimeMillis: Float
+    delayTime: Duration
 ): Pedal[F] = stream =>
   for {
     topic <- Stream.eval(ChunkedTopic[F, Float])
@@ -47,7 +49,7 @@ def echoRepeats[F[_]: Concurrent](
     out <- outStream
       .concurrently(
         (stream |+| feedbackStream)
-          .through(delayLine(delayTimeMillis))
+          .through(delayLine(delayTime))
           .through(topic.publish)
       )
   } yield out
