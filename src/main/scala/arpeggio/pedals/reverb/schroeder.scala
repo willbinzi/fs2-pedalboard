@@ -5,9 +5,11 @@ import arpeggio.pedals.delay.echoRepeats
 import arpeggio.routing.parallel
 import cats.effect.Concurrent
 
+import scala.concurrent.duration.*
+
 def schroeder[F[_]: Concurrent](
-    predelayMillis: Float,
-    decayMillis: Float,
+    predelay: Duration,
+    decay: Duration,
     mix: Float
 ): Pedal[F] =
   parallel(
@@ -15,22 +17,22 @@ def schroeder[F[_]: Concurrent](
     parallel(
       // Create 4 echo stages with slightly differing delays and gain factors
       Seq(1f, 1.17f, 1.34f, 1.5f)
-        .map(predelayMillis * _)
-        .map(t => echoRepeats(gain(decayMillis, t), t)): _*
+        .map(predelay * _)
+        .map(t => echoRepeats(gain(decay, t), t)): _*
     )
-      .andThen(allPassStage(0.7, 5))
-      .andThen(allPassStage(0.7, 1.7))
+      .andThen(allPassStage(0.7, 5.millis))
+      .andThen(allPassStage(0.7, 1700.micros))
       .andThen(_.map(_ * mix))
   )
 
-def gain(decayMillis: Float, predelayMillis: Float): Float =
-  scala.math.pow(2, (-3f * predelayMillis) / decayMillis).toFloat
+def gain(decay: Duration, predelay: Duration): Float =
+  scala.math.pow(2, (-3f * predelay.toMicros) / decay.toMicros).toFloat
 
 def allPassStage[F[_]: Concurrent](
     repeatGain: Float,
-    delayTimeMillis: Float
+    delayTime: Duration
 ): Pedal[F] = parallel(
   _.map(_ * -repeatGain),
-  echoRepeats(repeatGain, delayTimeMillis)
+  echoRepeats(repeatGain, delayTime)
     .andThen(_.map(_ * (1 - repeatGain * repeatGain)))
 )
